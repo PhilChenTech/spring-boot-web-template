@@ -1,6 +1,12 @@
 plugins {
     id 'java'
     id 'io.spring.dependency-management'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+javafx {
+    version = '21'
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing' ]
 }
 
 dependencies {
@@ -8,10 +14,23 @@ dependencies {
     implementation project(":domain")
     implementation project(":common")
     
-    // JavaFX 或 Swing 相關依賴
+    // Spring Boot 基礎依賴
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework:spring-context'
+    
+    // JavaFX 相關依賴
     implementation 'org.openjfx:javafx-controls:21'
     implementation 'org.openjfx:javafx-fxml:21'
+    implementation 'org.openjfx:javafx-swing:21'
     
-    // 或者使用 Swing
-    // implementation 'com.formdev:flatlaf:3.2.5'
+    // 現代 Swing Look and Feel
+    implementation 'com.formdev:flatlaf:3.2.5'
+    
+    // 桌面應用程式工具
+    implementation 'net.java.dev.jna:jna:5.13.0'
+    implementation 'net.java.dev.jna:jna-platform:5.13.0'
+    
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }
