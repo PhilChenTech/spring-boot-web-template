@@ -51,7 +51,6 @@ dependencies {
     
     // 可選的適配器依賴
     runtimeOnly project(":adapter-web")
-    runtimeOnly project(":adapter-desktop")
     runtimeOnly project(":adapter-batch")
     
     // 測試依賴

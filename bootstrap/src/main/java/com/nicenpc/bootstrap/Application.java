@@ -10,7 +10,6 @@ import org.springframework.context.annotation.ComponentScan;
  * 
  * 這個啟動類設計為可以支援多種應用程式類型：
  * - Web 應用程式（當 adapter-inbound 包含 Controller 時）
- * - 桌面應用程式（當包含 GUI 組件時）
  * - 批次處理應用程式（當包含 Scheduler 或 CommandLineRunner 時）
  * - 消息驅動應用程式（當包含 Message Listener 時）
  */
@@ -35,12 +34,6 @@ public class Application {
         
         // 根據應用程式類型設定不同的配置
         switch (appType.toLowerCase()) {
-            case "desktop":
-                // 桌面應用程式配置
-                app.setHeadless(false);
-                app.setWebApplicationType(WebApplicationType.NONE);
-                System.out.println("Starting in DESKTOP mode...");
-                break;
             case "batch":
                 // 批次處理應用程式配置
                 app.setWebApplicationType(WebApplicationType.NONE);
