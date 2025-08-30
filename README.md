@@ -31,7 +31,6 @@ psql -U postgres -f database\init-postgresql.sql
 專案支援多種環境配置：
 
 - **開發環境** (`dev`): `springboot_template_dev`
-- **測試環境** (`test`): 使用記憶體中的 H2 資料庫
 - **生產環境** (`prod`): `springboot_template_prod`
 - **預設環境**: `springboot_template`
 
@@ -73,9 +72,6 @@ copy .env.example .env
 ```
 
 詳細的環境變數配置說明請參考：[ENVIRONMENT_VARIABLES_GUIDE.md](ENVIRONMENT_VARIABLES_GUIDE.md)
-
-### H2 資料庫（測試環境）
-測試環境自動使用 H2 記憶體資料庫，無需額外設定。
 
 詳細的資料庫設定說明請參考：[POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)
 
@@ -231,9 +227,6 @@ java -jar bootstrap\build\libs\nice-npc-springboot-template-1.0.0.jar --spring.p
 ```bash
 # 開發環境（PostgreSQL）
 .\start-postgresql-app.bat web dev
-
-# 測試環境（H2 記憶體資料庫）
-.\start-postgresql-app.bat web test
 
 # 生產環境（PostgreSQL）
 .\start-postgresql-app.bat web prod

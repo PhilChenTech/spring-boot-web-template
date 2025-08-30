@@ -98,12 +98,6 @@ $env:DB_HOST = "prod-db.example.com"
 .\start-postgresql-app.bat web prod
 ```
 
-### 測試環境
-```bash
-# 測試環境自動使用 H2 記憶體資料庫
-.\start-postgresql-app.bat web test
-```
-
 ## 📋 檢查清單
 
 ### 開發環境設定

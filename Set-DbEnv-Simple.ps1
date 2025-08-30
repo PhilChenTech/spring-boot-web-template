@@ -26,10 +26,6 @@ switch ($Environment.ToLower()) {
         $env:DB_NAME = "springboot_template_prod"
         Write-Host "Production database: $($env:DB_NAME)" -ForegroundColor Red
     }
-    "test" {
-        Write-Host "Test environment uses H2 in-memory database" -ForegroundColor Cyan
-        return
-    }
     default {
         $env:DB_NAME = "springboot_template"
         Write-Host "Default database: $($env:DB_NAME)" -ForegroundColor Blue

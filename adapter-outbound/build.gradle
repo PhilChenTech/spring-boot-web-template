@@ -4,6 +4,4 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     // PostgreSQL 資料庫驅動
     runtimeOnly 'org.postgresql:postgresql'
-    // 保留 H2 用於測試環境
-    testRuntimeOnly 'com.h2database:h2'
 }

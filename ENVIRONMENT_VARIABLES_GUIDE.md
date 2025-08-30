@@ -81,7 +81,6 @@ export DB_NAME=springboot_template_dev
 | 環境 | 預設資料庫名稱 |
 |------|----------------|
 | 開發環境 (`dev`) | `springboot_template_dev` |
-| 測試環境 (`test`) | H2 記憶體資料庫 |
 | 生產環境 (`prod`) | `springboot_template_prod` |
 | 預設環境 | `springboot_template` |
 

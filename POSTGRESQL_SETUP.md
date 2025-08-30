@@ -98,7 +98,6 @@ psql -h localhost -U springboot_user -d springboot_template
 
 - `application.yml` - 預設配置（PostgreSQL）
 - `application-dev.yml` - 開發環境配置
-- `application-test.yml` - 測試環境配置（使用 H2）
 - `application-prod.yml` - 生產環境配置
 
 ## 6. 啟動應用程式

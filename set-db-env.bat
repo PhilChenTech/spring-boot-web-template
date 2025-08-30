@@ -27,10 +27,6 @@ if "%ENVIRONMENT%"=="dev" (
     set DB_NAME=springboot_template_prod
     echo Setting production database: %DB_NAME%
     echo 設定生產環境資料庫: %DB_NAME%
-) else if "%ENVIRONMENT%"=="test" (
-    echo Test environment uses H2 in-memory database
-    echo 測試環境使用 H2 記憶體資料庫
-    goto :end
 ) else (
     set DB_NAME=springboot_template
     echo Setting default database: %DB_NAME%

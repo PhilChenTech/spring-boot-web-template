@@ -4,21 +4,17 @@
 
 ### ✅ 解決的問題
 
-1. **重複類別定義錯誤**
-   - 修復了 `H2DemoController.java` 中錯誤的類別名稱 `UserDemoController`
-   - 重新命名為 `H2DemoController` 並調整 mapping 路徑為 `/api/h2-demo`
-
-2. **Bootstrap 模組配置錯誤**
+1. **Bootstrap 模組配置錯誤**
    - 添加了必要的 Gradle plugins：`java`、`org.springframework.boot`、`io.spring.dependency-management`
    - 添加了 JPA 和 Web 相關依賴
    - 配置了正確的模組依賴關係
 
-3. **JPA 配置衝突**
+2. **JPA 配置衝突**
    - 移除了重複的 `JpaConfig` 類別
    - 使用 infrastructure 模組中的統一配置
    - 添加了條件式配置（`@ConditionalOnClass`）
 
-4. **啟動參數解析問題**
+3. **啟動參數解析問題**
    - 修改了 `Application.java` 從啟動參數讀取 `app.type`
    - 更新了啟動腳本使用正確的參數格式
 
@@ -74,7 +70,7 @@
 - ✅ **啟動成功**：Web 模式成功啟動
 - ✅ **服務運行**：Tomcat 在 port 8080 正常運行
 - ✅ **配置載入**：Spring profile "web" 正確啟用
-- ✅ **資料庫連接**：H2 記憶體資料庫正常工作
+- ✅ **資料庫連接**：PostgreSQL 資料庫正常工作
 - ✅ **JPA 配置**：Hibernate 和 Repository 正確初始化
 
 ## 下一步建議

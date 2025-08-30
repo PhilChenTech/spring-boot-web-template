@@ -29,15 +29,11 @@ if "%PROFILE%"=="dev" (
     if "%DB_NAME%"=="" set DB_NAME=springboot_template_dev
 ) else if "%PROFILE%"=="prod" (
     if "%DB_NAME%"=="" set DB_NAME=springboot_template_prod
-) else if "%PROFILE%"=="test" (
-    echo Test environment uses H2 in-memory database
-    echo 測試環境使用 H2 記憶體資料庫
 ) else (
     if "%DB_NAME%"=="" set DB_NAME=springboot_template
 )
 
-REM 顯示目前資料庫設定（僅非測試環境）
-if not "%PROFILE%"=="test" (
+REM 顯示目前資料庫設定
     echo Database settings:
     echo 資料庫設定:
     echo   Host: %DB_HOST%:%DB_PORT%

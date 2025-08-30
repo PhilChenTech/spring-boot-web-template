@@ -4,12 +4,10 @@
 
 ### 1. 依賴配置更新
 - ✅ 在 `adapter-outbound/build.gradle` 中添加了 PostgreSQL 驅動依賴
-- ✅ 保留了 H2 依賴用於測試環境
 
 ### 2. 資料庫配置檔案更新
 - ✅ `application.yml` - 預設配置改為 PostgreSQL
 - ✅ `application-dev.yml` - 開發環境 PostgreSQL 配置
-- ✅ `application-test.yml` - 保持 H2 記憶體資料庫（適合測試）
 - ✅ `application-prod.yml` - 新增生產環境配置
 - ✅ `application-local.yml.example` - 本地開發配置範例
 
@@ -34,7 +32,6 @@
 
 ### 環境配置
 - **開發環境 (dev)**: `springboot_template_dev`
-- **測試環境 (test)**: H2 記憶體資料庫
 - **生產環境 (prod)**: `springboot_template_prod`
 - **預設環境**: `springboot_template`
 
@@ -67,9 +64,6 @@ psql -U postgres -f database\init-postgresql.sql
 # 開發環境
 .\start-postgresql-app.bat web dev
 
-# 測試環境（H2）
-.\start-postgresql-app.bat web test
-
 # 生產環境
 .\start-postgresql-app.bat web prod
 ```
@@ -87,7 +81,6 @@ psql -U postgres -f database\init-postgresql.sql
 3. **JPA 設定**: 適當配置了 Hibernate 方言和 DDL 策略
 
 ### 開發建議
-1. **測試隔離**: 測試環境使用 H2 記憶體資料庫，確保測試獨立性
 2. **環境切換**: 使用 Spring Profiles 輕鬆在不同環境間切換
 3. **本地配置**: 複製 `application-local.yml.example` 來建立個人的本地配置
 
