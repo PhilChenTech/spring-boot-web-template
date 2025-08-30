@@ -30,6 +30,14 @@ dependencies {
     // OpenAPI documentation
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
     
+    // Micrometer for metrics
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    
+    // Caching support
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    
     // 可選的適配器依賴
     runtimeOnly project(":adapter-web")
     runtimeOnly project(":adapter-desktop")

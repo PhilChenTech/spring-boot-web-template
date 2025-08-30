@@ -1,264 +1,331 @@
 # Nice NPC Spring Boot DDD Template
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](4. 監控 daemon 狀態：`.\gradlew.bat --status`
-
-## 資料庫配置
-
-### PostgreSQL 設定（預設）
-此專案已配置為使用 PostgreSQL 作為主要資料庫。
-
-#### 1. 安裝 PostgreSQL
-- **Windows**: 從 [PostgreSQL 官網](https://www.postgresql.org/download/windows/) 下載安裝程式
-- **macOS**: `brew install postgresql`
-- **Linux**: `sudo apt install postgresql postgresql-contrib`
-
-#### 2. 快速設定資料庫
-```bash
-# 執行自動化設定腳本
-.\setup-postgresql.bat
-
-# 或手動執行 SQL 腳本
-psql -U postgres -f database\init-postgresql.sql
-```
-
-#### 3. 測試連接
-```bash
-# 測試資料庫連接
-.\test-postgresql-connection.bat
-```
-
-#### 4. 環境配置
-專案支援多種環境配置：
-
-- **開發環境** (`dev`): `springboot_template_db_dev`
-- **生產環境** (`prod`): `springboot_template_db_prod`
-- **預設環境**: `springboot_template_db`
-
-#### 5. 自訂本地配置
-複製範例配置檔案並修改：
-```bash
-copy infrastructure\src\main\resources\application-local.yml.example infrastructure\src\main\resources\application-local.yml
-```
-
-然後編輯 `application-local.yml` 設定您的資料庫連接資訊。
-
-#### 6. 環境變數配置（推薦）
-為了提高安全性，專案支援使用環境變數來配置資料庫連接：
-
-**方法一：使用設定腳本**
-```bash
-# Windows 批次檔
-.\set-db-env.bat dev
-
-# PowerShell 腳本
-.\Set-DbEnv.ps1 dev
-```
-
-**方法二：手動設定環境變數**
-```powershell
-# PowerShell
-$env:DB_HOST = "localhost"
-$env:DB_PORT = "5432"
-$env:DB_USERNAME = "myuser"
-$env:DB_PASSWORD = "mypassword"
-$env:DB_NAME = "springboot_template_dev"
-```
-
-**方法三：使用 .env 檔案**
-```bash
-# 複製範例檔案
-copy .env.example .env
-# 編輯 .env 檔案設定您的資料庫資訊
-```
-
-詳細的環境變數配置說明請參考：[ENVIRONMENT_VARIABLES_GUIDE.md](ENVIRONMENT_VARIABLES_GUIDE.md)
-
-詳細的資料庫設定說明請參考：[POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)
-
-## 快速開始ps://choosealicense.com/licenses/mit/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
 [![Company](https://img.shields.io/badge/Company-Nice%20NPC-blue.svg)](https://nice-npc.com)
 
-一個基於 Domain-Driven Design (DDD) 架構的 Spring Boot 多模組專案模板，由 **Nice NPC** 開發並維護，適合用作微服務或複雜業務系統的起始專案。
+一個基於 **Clean Architecture** 和 **Domain-Driven Design (DDD)** 原則的 Spring Boot 模板專案，支援多種執行模式（Web、Desktop、Batch）。
 
-## 專案配置
-- **Java 版本**: 21 (LTS)
-- **Spring Boot**: 3.2.1
-- **Gradle**: 8.x
-- **架構**: DDD (Domain-Driven Design) 多模組
-- **許可證**: MIT License
-- **公司**: Nice NPC (nice-npc.com)
+## 🚀 特色功能
 
-## 專案修正總結
+- ✅ **Clean Architecture** - 清晰的層次結構和依賴方向
+- ✅ **Domain-Driven Design** - 領域驅動設計最佳實踐
+- ✅ **CQRS 模式** - 指令與查詢責任分離
+- ✅ **多模式支援** - Web、Desktop（JavaFX）、Batch 應用
+- ✅ **PostgreSQL 整合** - 生產級資料庫支援
+- ✅ **Spring Security** - 基本認證和 CORS 配置
+- ✅ **API 文檔** - OpenAPI 3.0 (Swagger)
+- ✅ **監控指標** - Micrometer + Prometheus
+- ✅ **健康檢查** - Spring Boot Actuator
+- ✅ **快取支援** - Caffeine 高性能快取
+- ✅ **CI/CD 流程** - GitHub Actions
+- ✅ **Docker 支援** - 容器化部署
+- ✅ **測試覆蓋率** - JaCoCo 報告
 
-### 1. 解決的問題
-- ✅ 修正了 `build.gradle` 檔案格式錯誤（所有依賴都在同一行）
-- ✅ 修正了模組依賴關係（adapter-inbound 需要依賴 domain）
-- ✅ 配置了正確的多模組 Spring Boot 結構
-- ✅ 解決了 Gradle daemon 卡住的問題
+## 🏗️ 專案架構
 
-### 2. Gradle 性能優化
-建立了 `gradle.properties` 檔案以優化性能：
-```properties
-org.gradle.daemon=true
-org.gradle.parallel=true
-org.gradle.configureondemand=true
-org.gradle.caching=true
-org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
-```
-
-### 3. 推薦的開發工作流程
-
-#### 快速建置（避免卡住）：
-```bash
-# 停止所有 daemon
-.\gradlew.bat --stop
-
-# 清理並建置（不使用 daemon）
-.\gradlew.bat --no-daemon clean build -x test
-
-# 直接執行 JAR 檔案（最快）
-java -jar adapter-inbound\build\libs\adapter-inbound-1.0.0.jar
-```
-
-#### 或使用批次檔：
-```bash
-# 執行 start-app.bat
-start-app.bat
-```
-
-### 4. API 端點
-- 健康檢查：http://localhost:8080/api/health
-- 歡迎頁面：http://localhost:8080/api/
-- 用戶 API：http://localhost:8080/api/users
-
-### 5. 專案結構
 ```
 springboot-web-template/
-├── adapter-inbound/     # Web 層（Controller）
-├── adapter-outbound/    # 資料存取層
-├── application/         # 應用服務層
-├── domain/             # 領域模型層
-├── infrastructure/     # 基礎設施層
-├── common/            # 共用組件
-├── gradle.properties  # Gradle 優化配置
-└── start-app.bat      # 快速啟動腳本
+├── bootstrap/              # 引導模組 - 應用程式啟動和配置
+├── domain/                 # 領域層 - 核心業務邏輯
+├── application/            # 應用層 - 業務用例協調
+│   ├── command/           # CQRS 指令
+│   ├── query/             # CQRS 查詢
+│   ├── handler/           # 指令/查詢處理器
+│   └── bus/               # 指令/查詢匯流排
+├── infrastructure/        # 基礎設施層 - 外部依賴實現
+├── adapter-inbound/       # 入站適配器 - 控制器和 API
+├── adapter-outbound/      # 出站適配器 - 資料庫存取
+├── adapter-web/           # Web 適配器 - Web 特定配置
+├── adapter-desktop/       # Desktop 適配器 - JavaFX 應用
+├── adapter-batch/         # Batch 適配器 - 批次處理
+└── common/                # 公共模組 - 共用工具
 ```
 
-### 6. Java 21 升級說明
-✅ **已升級至 Java 21**
-- 編譯目標: `sourceCompatibility = '21'`
-- 運行環境: `targetCompatibility = '21'`
-- 兼容性: Spring Boot 3.2.1 完全支援 Java 21
-- 性能提升: Java 21 LTS 版本，提供更好的性能和安全性
+## 🛠️ 技術棧
 
-### 7. 避免 Gradle 卡住的技巧
+- **Java 21** - 最新 LTS 版本
+- **Spring Boot 3.2.1** - 主要框架
+- **Spring Data JPA** - 資料持久化
+- **PostgreSQL** - 主要資料庫
+- **Spring Security** - 安全框架
+- **MapStruct** - 物件映射
+- **Caffeine** - 快取引擎
+- **Micrometer** - 指標監控
+- **SpringDoc OpenAPI** - API 文檔
+- **JUnit 5** - 單元測試
+- **JaCoCo** - 測試覆蓋率
+- **Docker** - 容器化
 
-#### `--no-daemon` 參數詳解
+## 🚀 快速開始
+
+### 前置需求
+
+- Java 21+
+- PostgreSQL 15+
+- Docker (可選)
+
+### 環境設定
+
+1. **安裝 PostgreSQL**
+   ```bash
+   # macOS
+   brew install postgresql@15
+   
+   # Ubuntu
+   sudo apt install postgresql-15
+   
+   # Windows - 下載官方安裝程式
+   ```
+
+2. **建立資料庫**
+   ```sql
+   CREATE DATABASE springboot_template_db;
+   CREATE DATABASE springboot_template_db_dev;
+   CREATE DATABASE springboot_template_db_test;
+   ```
+
+3. **設定環境變數**
+   ```bash
+   export DB_HOST=localhost
+   export DB_PORT=5432
+   export DB_USERNAME=postgres
+   export DB_PASSWORD=test
+   ```
+
+### 執行應用程式
+
+#### Web 模式 (預設)
 ```bash
-# 一般執行（使用 daemon）
-.\gradlew.bat build  # 快，但可能卡住
-
-# 使用 --no-daemon（不使用 daemon）
-.\gradlew.bat --no-daemon build  # 慢一點，但穩定
+./gradlew bootRun
 ```
-
-**什麼是 Gradle Daemon？**
-- 背景常駐的 JVM 進程
-- 目的：加速後續建置
-- 問題：可能記憶體洩漏、卡死、版本衝突
-
-**何時使用 `--no-daemon`？**
-- ✅ Gradle 經常卡住時
-- ✅ CI/CD 環境
-- ✅ 記憶體有限的電腦
-- ✅ 偶爾建置的專案
-
-**其他避免卡住技巧：**
-1. 定期執行 `.\gradlew.bat --stop` 清理 daemon
-2. 使用 `-x test` 跳過測試以加快建置
-3. 直接執行 JAR 檔案：`java -jar *.jar`
-4. 配置適當的 JVM 記憶體設定
-5. 監控 daemon 狀態：`.\gradlew.bat --status`
-
-## 快速開始
-
-### 1. 複製專案
+或指定 profile：
 ```bash
-git clone https://github.com/PhilChenTech/spring-boot-web-template.git
-cd spring-boot-web-template
+./gradlew bootRun -Dspring.profiles.active=web
 ```
 
-### 2. 設定資料庫
+#### Desktop 模式
 ```bash
-# 自動設定 PostgreSQL 資料庫
-.\setup-postgresql.bat
-
-# 或手動建立資料庫（如果偏好手動設定）
-psql -U postgres -f database\init-postgresql.sql
+./gradlew bootRun -Dspring.profiles.active=desktop
 ```
 
-### 3. 建置專案
+#### Batch 模式
 ```bash
-# 建議使用 --no-daemon 避免卡住
-.\gradlew.bat --no-daemon clean build -x test
+./gradlew bootRun -Dspring.profiles.active=batch
 ```
 
-### 4. 啟動應用程式
+### 建構和測試
+
 ```bash
-# 方法一：使用新的 PostgreSQL 啟動腳本
-.\start-postgresql-app.bat web dev
+# 執行所有測試
+./gradlew test
 
-# 方法二：使用原始批次檔（現在也支援 PostgreSQL）
-start-app.bat
+# 生成測試覆蓋率報告
+./gradlew jacocoTestReport
 
-# 方法三：直接執行 JAR
-java -jar bootstrap\build\libs\nice-npc-springboot-template-1.0.0.jar --spring.profiles.active=dev
+# 建構應用程式
+./gradlew build
+
+# 建構 Docker 映像
+docker build -t spring-boot-ddd-template .
 ```
 
-### 5. 測試 API
-- 健康檢查：http://localhost:8080/api/health
-- 歡迎頁面：http://localhost:8080/api/
-- 用戶 API：http://localhost:8080/api/users
+## 📋 API 文檔
 
-### 6. 不同環境啟動
+應用程式啟動後，可以透過以下 URL 存取 API 文檔：
+
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/api-docs
+
+## 📊 監控和健康檢查
+
+### Actuator 端點
+
+- **健康檢查**: http://localhost:8080/actuator/health
+- **應用資訊**: http://localhost:8080/actuator/info
+- **指標資料**: http://localhost:8080/actuator/metrics
+- **Prometheus 指標**: http://localhost:8080/actuator/prometheus
+
+### 自定義指標
+
+- `user.creation.count` - 使用者建立總次數
+- `user.query.count` - 使用者查詢總次數
+- `user.creation.time` - 使用者建立耗時
+- `user.active.count` - 目前活躍使用者數
+
+## 🐳 Docker 部署
+
+### 建構映像
 ```bash
-# 開發環境（PostgreSQL）
-.\start-postgresql-app.bat web dev
-
-# 生產環境（PostgreSQL）
-.\start-postgresql-app.bat web prod
+docker build -t spring-boot-ddd-template .
 ```
 
-現在 API 回應將包含 Nice NPC 的品牌信息！
+### 執行容器
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e DB_HOST=host.docker.internal \
+  -e DB_USERNAME=postgres \
+  -e DB_PASSWORD=yourpassword \
+  --name spring-app \
+  spring-boot-ddd-template
+```
 
-## 貢獻指南
+### Docker Compose (建議)
+```yaml
+version: '3.8'
+services:
+  app:
+    image: spring-boot-ddd-template
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: springboot_template_db_prod
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-我們歡迎任何形式的貢獻！請參考以下步驟：
+volumes:
+  postgres_data:
+```
 
-1. Fork 此專案
-2. 創建您的功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的變更 (`git commit -m 'Add some AmazingFeature'`)
+## 🔧 配置說明
+
+### 環境配置
+
+專案支援多個環境配置：
+
+- `application.yml` - 通用配置
+- `application-dev.yml` - 開發環境
+- `application-prod.yml` - 生產環境
+- `application-web.yml` - Web 模式特定配置
+- `application-desktop.yml` - Desktop 模式特定配置
+
+### 重要配置項
+
+```yaml
+# 資料庫配置
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+# 快取配置
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterAccess=600s
+
+# 監控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+```
+
+## 🧪 測試策略
+
+### 測試層級
+
+1. **單元測試** - Domain 和 Application 層
+2. **整合測試** - Repository 和 Service 層
+3. **API 測試** - Controller 層
+4. **端到端測試** - 完整流程測試
+
+### 執行測試
+
+```bash
+# 執行所有測試
+./gradlew test
+
+# 執行特定模組測試
+./gradlew :domain:test
+
+# 生成覆蓋率報告
+./gradlew jacocoTestReport
+
+# 查看覆蓋率報告
+open build/reports/jacoco/test/html/index.html
+```
+
+## 🚀 CI/CD 流程
+
+專案包含完整的 GitHub Actions 工作流程：
+
+### CI 流程 (`.github/workflows/ci.yml`)
+- 程式碼檢出
+- Java 21 環境設置
+- PostgreSQL 服務啟動
+- 依賴快取
+- 測試執行
+- 覆蓋率報告
+- 安全掃描
+
+### CD 流程 (`.github/workflows/cd.yml`)
+- Docker 映像建構
+- 容器註冊表推送
+- 自動發布
+
+## 📚 開發指南
+
+### 新增功能
+
+1. **領域實體** - 在 `domain` 模組中定義
+2. **應用服務** - 在 `application` 模組中實現 CQRS 模式
+3. **資料庫存取** - 在 `infrastructure` 模組中實現 Repository
+4. **API 端點** - 在 `adapter-inbound` 模組中實現 Controller
+
+### 最佳實踐
+
+- 遵循 Clean Architecture 依賴規則
+- 使用 CQRS 分離讀寫操作
+- 在 Domain 層實現業務驗證
+- 使用 MapStruct 進行物件轉換
+- 添加適當的快取策略
+- 編寫充足的單元測試
+
+## 🤝 貢獻指南
+
+1. Fork 專案
+2. 建立功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟一個 Pull Request
+5. 開啟 Pull Request
 
-## 許可證
+## 📄 授權
 
-此專案採用 MIT 許可證 - 詳情請參閱 [LICENSE](LICENSE) 檔案。
+本專案採用 MIT 授權條款 - 查看 [LICENSE](LICENSE) 檔案了解詳情。
 
-## 聯絡方式
+## 👥 團隊
 
-如果您有任何問題或建議，歡迎：
-- 開啟 [Issue](https://github.com/PhilChenTech/spring-boot-web-template/issues)
-- 聯絡專案維護者：[@PhilChenTech](https://github.com/PhilChenTech)
-- 造訪公司官網：[nice-npc.com](https://nice-npc.com)
+- **Nice NPC Team** - 初始開發團隊
 
-## 致謝
+## 📞 支援
 
-感謝所有為此專案做出貢獻的開發者！
+如有問題或建議，請：
+
+1. 開啟 [GitHub Issue](https://github.com/yourusername/spring-boot-ddd-template/issues)
+2. 查看 [Wiki 文檔](https://github.com/yourusername/spring-boot-ddd-template/wiki)
+3. 發送郵件至：contact@nicenpc.com
 
 ---
 
-**Powered by [Nice NPC](https://nice-npc.com) - Making Technology Nice & Professional & Creative**
+**Happy Coding! 🚀**

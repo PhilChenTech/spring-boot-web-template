@@ -8,6 +8,9 @@ spring:
       minimum-idle: 10
       idle-timeout: 300000
       leak-detection-threshold: 60000
+      max-lifetime: 1800000
+      validation-timeout: 5000
+      pool-name: "HikariCP-Production"
   
   jpa:
     hibernate:

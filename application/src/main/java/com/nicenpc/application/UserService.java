@@ -1,5 +1,11 @@
 package com.nicenpc.application;
 
+import com.nicenpc.application.bus.CommandBus;
+import com.nicenpc.application.bus.QueryBus;
+import com.nicenpc.application.command.CreateUserCommand;
+import com.nicenpc.application.query.GetAllUsersQuery;
+import com.nicenpc.application.query.GetUserByEmailQuery;
+import com.nicenpc.application.query.GetUserByIdQuery;
 import com.nicenpc.domain.User;
 import com.nicenpc.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,47 +16,39 @@ import java.util.List;
 
 /**
  * 使用者應用服務
- * 處理使用者相關的業務邏輯
+ * 使用 CQRS 模式處理使用者相關的業務邏輯
  */
 @Service
 @RequiredArgsConstructor
 public class UserService {
     
+    private final CommandBus commandBus;
+    private final QueryBus queryBus;
+    
+    // 保留部分直接存取方法以維持現有API兼容性
     private final UserRepository userRepository;
 
-    @Transactional(readOnly = true)
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return queryBus.send(new GetAllUsersQuery());
     }
 
-    @Transactional(readOnly = true)
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return queryBus.send(new GetUserByIdQuery(id));
     }
 
-    @Transactional(readOnly = true)
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+        return queryBus.send(new GetUserByEmailQuery(email));
     }
 
-    @Transactional
     public User createUser(String name, String email) {
-        // 建立Domain物件並進行驗證
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
+        // 使用命令匯流排發送建立使用者指令
+        commandBus.send(new CreateUserCommand(name, email));
         
-        // 使用Domain層的驗證邏輯
-        user.validate();
-        
-        // 檢查email是否已存在
-        if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("電子郵件已存在: " + email);
-        }
-        
-        return userRepository.save(user);
+        // 查詢剛建立的使用者（在實際應用中，可能需要返回建立的使用者ID）
+        return getUserByEmail(email);
     }
 
+    // 保留一些直接方法以維持現有功能
     @Transactional(readOnly = true)
     public long count() {
         return userRepository.count();
