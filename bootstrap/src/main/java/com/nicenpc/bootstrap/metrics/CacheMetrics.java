@@ -37,10 +37,10 @@ public class CacheMetrics {
             Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
             
             // 註冊快取大小指標
-            Gauge.builder("cache.size")
+            Gauge.builder("cache.size", nativeCache, cache -> (double) cache.estimatedSize())
                     .tag("cache", cacheName)
                     .description("快取中的條目數量")
-                    .register(meterRegistry, nativeCache, cache -> (double) cache.estimatedSize());
+                    .register(meterRegistry);
             
             // 註冊快取統計指標
             registerCacheStats(cacheName, nativeCache);
@@ -49,28 +49,28 @@ public class CacheMetrics {
     
     private void registerCacheStats(String cacheName, Cache<Object, Object> cache) {
         // 快取命中率
-        Gauge.builder("cache.hit.rate")
+        Gauge.builder("cache.hit.rate", cache, c -> c.stats().hitRate())
                 .tag("cache", cacheName)
                 .description("快取命中率")
-                .register(meterRegistry, cache, c -> c.stats().hitRate());
+                .register(meterRegistry);
         
         // 快取未命中數
-        Gauge.builder("cache.miss.count")
+        Gauge.builder("cache.miss.count", cache, c -> (double) c.stats().missCount())
                 .tag("cache", cacheName)
                 .description("快取未命中次數")
-                .register(meterRegistry, cache, c -> (double) c.stats().missCount());
+                .register(meterRegistry);
         
         // 快取載入時間
-        Gauge.builder("cache.load.time")
+        Gauge.builder("cache.load.time", cache, c -> c.stats().averageLoadPenalty())
                 .tag("cache", cacheName)
                 .description("平均快取載入時間 (奈秒)")
-                .register(meterRegistry, cache, c -> c.stats().averageLoadPenalty());
+                .register(meterRegistry);
         
         // 快取逐出數量
-        Gauge.builder("cache.eviction.count")
+        Gauge.builder("cache.eviction.count", cache, c -> (double) c.stats().evictionCount())
                 .tag("cache", cacheName)
                 .description("快取逐出次數")
-                .register(meterRegistry, cache, c -> (double) c.stats().evictionCount());
+                .register(meterRegistry);
     }
     
     /**

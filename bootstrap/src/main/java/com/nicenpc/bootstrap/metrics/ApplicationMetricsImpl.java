@@ -36,6 +36,8 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
     private final MeterRegistry meterRegistry;
     
     public ApplicationMetricsImpl(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+        
         // 使用者操作計數器
         this.userCreationCounter = Counter.builder("user.creation.count")
                 .description("使用者建立總次數")
