@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(scanBasePackages = "com.nicenpc")
 @EnableJpaRepositories(basePackages = "com.nicenpc.adapteroutbound.repository")
-@EntityScan(basePackages = "com.nicenpc.domain")
+@EntityScan(basePackages = "com.nicenpc.adapteroutbound.entity")
 public class AdapterInboundApplication {
     public static void main(String[] args) {
         SpringApplication.run(AdapterInboundApplication.class, args);

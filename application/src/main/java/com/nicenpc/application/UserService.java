@@ -1,13 +1,17 @@
 package com.nicenpc.application;
 
-import com.nicenpc.adapteroutbound.repository.UserRepository;
 import com.nicenpc.domain.User;
+import com.nicenpc.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 使用者應用服務
+ * 處理使用者相關的業務邏輯
+ */
 @Service
 @Transactional
 public class UserService {

@@ -1,0 +1,30 @@
+spring:
+  # 測試環境 H2 資料庫設定
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # 關閉 H2 Web Console（測試環境）
+  h2:
+    console:
+      enabled: false
+  
+  # JPA 設定
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+
+# 日誌設定
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    com.nicenpc: INFO
+    root: WARN

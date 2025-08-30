@@ -1,17 +1,27 @@
-package com.nicenpc.domain;
+package com.nicenpc.adapteroutbound.entity;
+
+import jakarta.persistence.*;
 
 /**
- * 使用者領域實體
- * 純淨的領域物件，不包含任何基礎設施層的依賴
+ * 使用者 JPA 實體
+ * 負責資料庫映射，屬於基礎設施層
  */
-public class User {
+@Entity
+@Table(name = "users")
+public class UserEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(nullable = false)
     private String name;
+    
+    @Column(nullable = false, unique = true)
     private String email;
 
-    public User() {}
+    public UserEntity() {}
 
-    public User(Long id, String name, String email) {
+    public UserEntity(Long id, String name, String email) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -43,7 +53,7 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
+        return "UserEntity{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
