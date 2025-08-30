@@ -3,11 +3,8 @@ dependencies {
     implementation project(":domain")
     implementation project(":application")
     implementation project(":common")
-    
-    // Spring Boot 核心依賴
+
+    // Spring Boot core dependencies
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    
-    // H2 資料庫
-    runtimeOnly 'com.h2database:h2'
 }

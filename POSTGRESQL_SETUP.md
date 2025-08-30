@@ -62,11 +62,11 @@ GRANT ALL PRIVILEGES ON DATABASE springboot_template_prod TO springboot_user;
 ```bash
 # Windows PowerShell
 $env:DB_USERNAME="postgres"
-$env:DB_PASSWORD="postgres"
+$env:DB_PASSWORD="test"
 
 # Linux/macOS
 export DB_USERNAME=postgres
-export DB_PASSWORD=postgres
+export DB_PASSWORD=test
 ```
 
 ### 生產環境

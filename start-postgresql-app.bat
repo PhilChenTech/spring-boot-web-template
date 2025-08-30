@@ -22,7 +22,7 @@ REM 設定環境變數（如果未設定的話）
 if "%DB_HOST%"=="" set DB_HOST=localhost
 if "%DB_PORT%"=="" set DB_PORT=5432
 if "%DB_USERNAME%"=="" set DB_USERNAME=postgres
-if "%DB_PASSWORD%"=="" set DB_PASSWORD=postgres
+if "%DB_PASSWORD%"=="" set DB_PASSWORD=test
 
 REM 根據 profile 設定資料庫名稱
 if "%PROFILE%"=="dev" (
