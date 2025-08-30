@@ -6,7 +6,7 @@ echo.
 
 REM 測試不同環境的資料庫連接
 echo 測試預設資料庫連接...
-psql -h localhost -U postgres -d springboot_template -c "SELECT version();"
+psql -h localhost -U postgres -d springboot_template_db -c "SELECT version();"
 
 if %ERRORLEVEL% EQU 0 (
     echo [✓] 預設資料庫連接成功
@@ -16,7 +16,7 @@ if %ERRORLEVEL% EQU 0 (
 
 echo.
 echo 測試開發環境資料庫連接...
-psql -h localhost -U postgres -d springboot_template_dev -c "SELECT version();"
+psql -h localhost -U postgres -d springboot_template_db_dev -c "SELECT version();"
 
 if %ERRORLEVEL% EQU 0 (
     echo [✓] 開發環境資料庫連接成功
@@ -26,7 +26,7 @@ if %ERRORLEVEL% EQU 0 (
 
 echo.
 echo 測試生產環境資料庫連接...
-psql -h localhost -U postgres -d springboot_template_prod -c "SELECT version();"
+psql -h localhost -U postgres -d springboot_template_db_prod -c "SELECT version();"
 
 if %ERRORLEVEL% EQU 0 (
     echo [✓] 生產環境資料庫連接成功

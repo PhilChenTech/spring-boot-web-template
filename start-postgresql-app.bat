@@ -26,11 +26,11 @@ if "%DB_PASSWORD%"=="" set DB_PASSWORD=test
 
 REM 根據 profile 設定資料庫名稱
 if "%PROFILE%"=="dev" (
-    if "%DB_NAME%"=="" set DB_NAME=springboot_template_dev
+    if "%DB_NAME%"=="" set DB_NAME=springboot_template_db_dev
 ) else if "%PROFILE%"=="prod" (
-    if "%DB_NAME%"=="" set DB_NAME=springboot_template_prod
+    if "%DB_NAME%"=="" set DB_NAME=springboot_template_db_prod
 ) else (
-    if "%DB_NAME%"=="" set DB_NAME=springboot_template
+    if "%DB_NAME%"=="" set DB_NAME=springboot_template_db
 )
 
 REM 顯示目前資料庫設定

@@ -7,6 +7,7 @@ import com.nicenpc.adapterinbound.dto.UserResponse;
 import com.nicenpc.adapterinbound.mapper.UserDTOMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -21,23 +22,29 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserResponse> getAllUsers() {
-        return userService.getAllUsers().stream()
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        List<UserResponse> responses = users.stream()
                 .map(UserDTOMapper.INSTANCE::toResponse)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
-    public UserResponse getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
-        return UserDTOMapper.INSTANCE.toResponse(user);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        UserResponse response = UserDTOMapper.INSTANCE.toResponse(user);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = UserDTOMapper.INSTANCE.toDomain(request);
         User savedUser = userService.createUser(user.getName(), user.getEmail());
-        return UserDTOMapper.INSTANCE.toResponse(savedUser);
+        UserResponse response = UserDTOMapper.INSTANCE.toResponse(savedUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

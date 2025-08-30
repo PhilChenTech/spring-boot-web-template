@@ -19,15 +19,15 @@ $env:DB_PASSWORD = "test"
 # 根據環境設定不同的資料庫名稱
 switch ($Environment.ToLower()) {
     "dev" {
-        $env:DB_NAME = "springboot_template_dev"
+        $env:DB_NAME = "springboot_template_db_dev"
         Write-Host "Development database: $($env:DB_NAME)" -ForegroundColor Yellow
     }
     "prod" {
-        $env:DB_NAME = "springboot_template_prod"
+        $env:DB_NAME = "springboot_template_db_prod"
         Write-Host "Production database: $($env:DB_NAME)" -ForegroundColor Red
     }
     default {
-        $env:DB_NAME = "springboot_template"
+        $env:DB_NAME = "springboot_template_db"
         Write-Host "Default database: $($env:DB_NAME)" -ForegroundColor Blue
     }
 }

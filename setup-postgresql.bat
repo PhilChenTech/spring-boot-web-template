@@ -15,13 +15,13 @@ if %ERRORLEVEL% NEQ 0 (
 echo PostgreSQL 已找到，正在建立資料庫...
 
 REM 建立資料庫的 SQL 腳本
-echo CREATE DATABASE IF NOT EXISTS springboot_template; > temp_setup.sql
-echo CREATE DATABASE IF NOT EXISTS springboot_template_dev; >> temp_setup.sql
-echo CREATE DATABASE IF NOT EXISTS springboot_template_prod; >> temp_setup.sql
+echo CREATE DATABASE IF NOT EXISTS springboot_template_db; > temp_setup.sql
+echo CREATE DATABASE IF NOT EXISTS springboot_template_db_dev; >> temp_setup.sql
+echo CREATE DATABASE IF NOT EXISTS springboot_template_db_prod; >> temp_setup.sql
 echo CREATE USER IF NOT EXISTS springboot_user WITH ENCRYPTED PASSWORD 'springboot_password'; >> temp_setup.sql
-echo GRANT ALL PRIVILEGES ON DATABASE springboot_template TO springboot_user; >> temp_setup.sql
-echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_dev TO springboot_user; >> temp_setup.sql
-echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_prod TO springboot_user; >> temp_setup.sql
+echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_db TO springboot_user; >> temp_setup.sql
+echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_db_dev TO springboot_user; >> temp_setup.sql
+echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_db_prod TO springboot_user; >> temp_setup.sql
 
 REM 執行 SQL 腳本
 echo 請輸入 PostgreSQL postgres 使用者的密碼（預設通常是 postgres）:
@@ -31,9 +31,9 @@ if %ERRORLEVEL% EQU 0 (
     echo.
     echo 資料庫設定完成！
     echo 已建立以下資料庫：
-    echo - springboot_template
-    echo - springboot_template_dev  
-    echo - springboot_template_prod
+    echo - springboot_template_db
+    echo - springboot_template_db_dev  
+    echo - springboot_template_db_prod
     echo.
     echo 已建立使用者：springboot_user
     echo 密碼：springboot_password

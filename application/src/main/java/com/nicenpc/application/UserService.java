@@ -13,7 +13,6 @@ import java.util.List;
  * 處理使用者相關的業務邏輯
  */
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class UserService {
     
@@ -34,15 +33,20 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    @Transactional
     public User createUser(String name, String email) {
+        // 建立Domain物件並進行驗證
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        
+        // 使用Domain層的驗證邏輯
+        user.validate();
+        
         // 檢查email是否已存在
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists: " + email);
         }
-        
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
         
         return userRepository.save(user);
     }
@@ -57,6 +61,7 @@ public class UserService {
         return userRepository.findByEmailDomain(domain);
     }
 
+    @Transactional
     public void deleteAll() {
         userRepository.deleteAll();
     }

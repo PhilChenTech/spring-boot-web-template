@@ -20,15 +20,15 @@ set ENVIRONMENT=%1
 if "%ENVIRONMENT%"=="" set ENVIRONMENT=dev
 
 if "%ENVIRONMENT%"=="dev" (
-    set DB_NAME=springboot_template_dev
+    set DB_NAME=springboot_template_db_dev
     echo Setting development database: %DB_NAME%
     echo 設定開發環境資料庫: %DB_NAME%
 ) else if "%ENVIRONMENT%"=="prod" (
-    set DB_NAME=springboot_template_prod
+    set DB_NAME=springboot_template_db_prod
     echo Setting production database: %DB_NAME%
     echo 設定生產環境資料庫: %DB_NAME%
 ) else (
-    set DB_NAME=springboot_template
+    set DB_NAME=springboot_template_db
     echo Setting default database: %DB_NAME%
     echo 設定預設資料庫: %DB_NAME%
 )

@@ -30,9 +30,9 @@ psql -U postgres -f database\init-postgresql.sql
 #### 4. 環境配置
 專案支援多種環境配置：
 
-- **開發環境** (`dev`): `springboot_template_dev`
-- **生產環境** (`prod`): `springboot_template_prod`
-- **預設環境**: `springboot_template`
+- **開發環境** (`dev`): `springboot_template_db_dev`
+- **生產環境** (`prod`): `springboot_template_db_prod`
+- **預設環境**: `springboot_template_db`
 
 #### 5. 自訂本地配置
 複製範例配置檔案並修改：
