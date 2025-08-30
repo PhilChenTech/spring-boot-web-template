@@ -1,29 +1,44 @@
 package com.nicenpc.application;
 
+import com.nicenpc.adapteroutbound.repository.UserRepository;
 import com.nicenpc.domain.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class UserService {
-    private List<User> users = new ArrayList<>();
+    
+    private final UserRepository userRepository;
 
-    public List<User> getAllUsers() {
-        return users;
+    @Autowired
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public User getUserById(Long id) {
-        return users.stream()
-                .filter(user -> user.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return userRepository.findById(id).orElse(null);
     }
 
     public User createUser(String name, String email) {
-        User user = new User((long) (users.size() + 1), name, email);
-        users.add(user);
-        return user;
+        // 檢查email是否已存在
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists: " + email);
+        }
+        
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        
+        return userRepository.save(user);
     }
 }
