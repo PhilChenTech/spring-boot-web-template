@@ -1,4 +1,4 @@
-package com.nicenpc.adapterinbound.config;
+package com.nicenpc.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +9,10 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import javax.sql.DataSource;
 
+/**
+ * H2 資料庫初始化配置
+ * 基礎設施層配置，負責資料庫初始化相關設定
+ */
 @Configuration
 public class H2DatabaseConfig {
 
