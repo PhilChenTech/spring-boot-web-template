@@ -1,7 +1,10 @@
 package com.nicenpc.adapterinbound.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +14,9 @@ import jakarta.validation.constraints.NotBlank;
  * 屬於 Inbound Adapter 層，用於接收外部請求
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "建立使用者請求資料")
 public class CreateUserRequest {
     

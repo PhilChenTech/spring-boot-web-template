@@ -1,29 +1,29 @@
 package com.nicenpc.adapterinbound.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nicenpc.application.UserService;
-import com.nicenpc.application.bus.CommandBus;
-import com.nicenpc.application.bus.QueryBus;
+import com.nicenpc.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-
 
 /**
  * UserController 控制器測試
+ * 使用 @WebMvcTest 進行 Controller 層的單元測試
  */
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(UserController.class)
 class UserControllerTest {
 
     @Autowired
@@ -31,12 +31,9 @@ class UserControllerTest {
 
     @MockBean
     private UserService userService;
-
-    @MockBean
-    private CommandBus commandBus;
-
-    @MockBean
-    private QueryBus queryBus;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void testGetAllUsersEmpty() throws Exception {
@@ -48,5 +45,86 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+    
+    @Test
+    void testGetAllUsersWithData() throws Exception {
+        // Given
+        User user1 = new User(1L, "John", "john@example.com");
+        User user2 = new User(2L, "Jane", "jane@example.com");
+        List<User> users = List.of(user1, user2);
+        when(userService.getAllUsers()).thenReturn(users);
+
+        // When & Then
+        mockMvc.perform(get("/api/users"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].name").value("John"))
+                .andExpect(jsonPath("$[0].email").value("john@example.com"))
+                .andExpect(jsonPath("$[1].id").value(2))
+                .andExpect(jsonPath("$[1].name").value("Jane"))
+                .andExpect(jsonPath("$[1].email").value("jane@example.com"));
+    }
+    
+    @Test
+    void testGetUserByIdExists() throws Exception {
+        // Given
+        User user = new User(1L, "John", "john@example.com");
+        when(userService.getUserById(1L)).thenReturn(user);
+
+        // When & Then
+        mockMvc.perform(get("/api/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("John"))
+                .andExpect(jsonPath("$.email").value("john@example.com"));
+    }
+    
+    @Test
+    void testGetUserByIdNotExists() throws Exception {
+        // Given
+        when(userService.getUserById(999L)).thenReturn(null);
+
+        // When & Then
+        mockMvc.perform(get("/api/users/999"))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    void testCreateUserValid() throws Exception {
+        // Given
+        User savedUser = new User(1L, "John", "john@example.com");
+        when(userService.createUser(anyString(), anyString())).thenReturn(savedUser);
+
+        // When & Then
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"John\",\"email\":\"john@example.com\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("John"))
+                .andExpect(jsonPath("$.email").value("john@example.com"));
+    }
+    
+    @Test
+    void testCreateUserInvalidRequest() throws Exception {
+        // When & Then - 缺少必要欄位
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"\"}"))
+                .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    void testCreateUserInvalidEmail() throws Exception {
+        // When & Then - 無效的電子郵件格式
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"John\",\"email\":\"invalid-email\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

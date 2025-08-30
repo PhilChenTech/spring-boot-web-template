@@ -1,5 +1,7 @@
 package com.nicenpc.bootstrap.config;
 
+import com.nicenpc.bootstrap.config.properties.AppProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -21,7 +23,10 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @Profile("web")
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final AppProperties appProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -67,17 +72,28 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 允許的源
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        AppProperties.Cors corsConfig = appProperties.getCors();
+        
+        // 允許的源 - 從配置屬性讀取，提高安全性
+        List<String> origins = Arrays.asList(corsConfig.getAllowedOrigins().split(","));
+        configuration.setAllowedOrigins(origins);
         
         // 允許的 HTTP 方法
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        List<String> methods = Arrays.asList(corsConfig.getAllowedMethods().split(","));
+        configuration.setAllowedMethods(methods);
         
-        // 允許的標頭
-        configuration.setAllowedHeaders(List.of("*"));
+        // 允許的標頭 - 從配置讀取
+        List<String> headers = Arrays.asList(corsConfig.getAllowedHeaders().split(","));
+        configuration.setAllowedHeaders(headers);
+        
+        // 暴露的標頭
+        configuration.setExposedHeaders(Arrays.asList("X-Total-Count"));
         
         // 是否允許憑證
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(corsConfig.isAllowCredentials());
+        
+        // 預檢請求快取時間（秒）
+        configuration.setMaxAge(corsConfig.getMaxAge());
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);

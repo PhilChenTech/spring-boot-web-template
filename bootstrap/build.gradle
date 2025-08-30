@@ -38,10 +38,25 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     
+    // Database migration
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.postgresql:postgresql'
+    
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Lombok (inherited from parent but need to be explicit for bootstrap)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
     // 可選的適配器依賴
     runtimeOnly project(":adapter-web")
     runtimeOnly project(":adapter-desktop")
     runtimeOnly project(":adapter-batch")
+    
+    // 測試依賴
+    testImplementation project(":adapter-inbound")
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 // 配置主類

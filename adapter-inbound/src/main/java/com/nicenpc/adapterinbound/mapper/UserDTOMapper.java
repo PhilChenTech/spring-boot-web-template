@@ -28,9 +28,11 @@ public interface UserDTOMapper {
     /**
      * 將創建請求 DTO 轉換為領域實體
      * 注意：id 設為 null，因為創建時還沒有 id
+     *       active 設為預設值 true
      * @param request 創建請求 DTO
      * @return 領域實體
      */
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "active", constant = "true")
     User toDomain(CreateUserRequest request);
 }

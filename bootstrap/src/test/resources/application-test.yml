@@ -1,0 +1,52 @@
+# 測試環境配置
+spring:
+  # 測試環境資料庫配置（由 Testcontainers 動態設定）
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  # JPA 測試設定
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop  # 測試環境每次重新創建表
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # 關閉 Flyway（由 Testcontainers 動態控制）
+  flyway:
+    enabled: false
+
+  # 測試環境安全配置（關閉安全以簡化測試）
+  security:
+    user:
+      name: test-admin
+      password: test-password
+      roles: ADMIN
+
+# 測試環境日誌設定
+logging:
+  level:
+    com.nicenpc: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.testcontainers: INFO
+
+# 測試環境服務器設定
+server:
+  port: 0  # 隨機端口
+
+# 關閉 Actuator 以簡化測試
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+
+# CORS 測試設定
+cors:
+  allowed-origins: http://localhost:3000
