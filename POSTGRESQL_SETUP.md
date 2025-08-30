@@ -38,13 +38,6 @@ CREATE DATABASE springboot_template_prod;
 -- 建立一般環境資料庫
 CREATE DATABASE springboot_template;
 
--- 建立專用使用者（可選）
-CREATE USER springboot_user WITH ENCRYPTED PASSWORD 'springboot_password';
-
--- 授權使用者存取資料庫
-GRANT ALL PRIVILEGES ON DATABASE springboot_template TO springboot_user;
-GRANT ALL PRIVILEGES ON DATABASE springboot_template_dev TO springboot_user;
-GRANT ALL PRIVILEGES ON DATABASE springboot_template_prod TO springboot_user;
 
 -- 確認資料庫建立成功
 \l
@@ -74,8 +67,8 @@ export DB_PASSWORD=test
 
 ```bash
 # 設定環境變數
-export DB_USERNAME=springboot_user
-export DB_PASSWORD=springboot_password
+export DB_USERNAME=postgres
+export DB_PASSWORD=test
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_NAME=springboot_template_prod
@@ -88,8 +81,6 @@ export DB_NAME=springboot_template_prod
 # 使用 psql 測試連接
 psql -h localhost -U postgres -d springboot_template
 
-# 或使用建立的專用使用者
-psql -h localhost -U springboot_user -d springboot_template
 ```
 
 ## 5. 應用程式設定檔案
@@ -121,13 +112,6 @@ psql -h localhost -U springboot_user -d springboot_template
 3. 確認資料庫名稱、使用者名稱和密碼正確
 4. 檢查 `pg_hba.conf` 檔案的認證設定
 
-### 權限問題
-```sql
--- 授予更多權限
-GRANT CONNECT ON DATABASE springboot_template TO springboot_user;
-GRANT USAGE ON SCHEMA public TO springboot_user;
-GRANT CREATE ON SCHEMA public TO springboot_user;
-```
 
 ### 資料庫編碼問題
 建立資料庫時指定編碼：

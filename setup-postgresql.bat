@@ -18,10 +18,6 @@ REM 建立資料庫的 SQL 腳本
 echo CREATE DATABASE IF NOT EXISTS springboot_template_db; > temp_setup.sql
 echo CREATE DATABASE IF NOT EXISTS springboot_template_db_dev; >> temp_setup.sql
 echo CREATE DATABASE IF NOT EXISTS springboot_template_db_prod; >> temp_setup.sql
-echo CREATE USER IF NOT EXISTS springboot_user WITH ENCRYPTED PASSWORD 'springboot_password'; >> temp_setup.sql
-echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_db TO springboot_user; >> temp_setup.sql
-echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_db_dev TO springboot_user; >> temp_setup.sql
-echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_db_prod TO springboot_user; >> temp_setup.sql
 
 REM 執行 SQL 腳本
 echo 請輸入 PostgreSQL postgres 使用者的密碼（預設通常是 postgres）:
@@ -35,8 +31,6 @@ if %ERRORLEVEL% EQU 0 (
     echo - springboot_template_db_dev  
     echo - springboot_template_db_prod
     echo.
-    echo 已建立使用者：springboot_user
-    echo 密碼：springboot_password
 ) else (
     echo.
     echo 資料庫設定過程中發生錯誤。
