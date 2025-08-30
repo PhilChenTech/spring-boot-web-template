@@ -2,6 +2,9 @@ package com.nicenpc.bootstrap.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nicenpc.adapterinbound.dto.CreateUserRequest;
+import com.nicenpc.adapterinbound.dto.UserResponse;
+import com.nicenpc.adapterinbound.controller.UserController;
+import com.nicenpc.adapterinbound.mapper.UserDTOMapper;
 import com.nicenpc.application.UserService;
 import com.nicenpc.domain.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,13 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -26,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 使用者 Web 層測試
  * 使用 Mock 物件，不依賴任何資料庫
  */
-@WebMvcTest
+@WebMvcTest(UserController.class)
 class UserIntegrationTest {
 
     @Autowired
@@ -38,10 +40,13 @@ class UserIntegrationTest {
     @MockBean
     private UserService userService;
 
+    @MockBean
+    private UserDTOMapper userDTOMapper;
+
     @BeforeEach
     void setUp() {
-        // 清理測試數據
-        userService.deleteAll();
+        // 設定 Mock 行為
+        reset(userService, userDTOMapper);
     }
 
     @Test

@@ -18,6 +18,4 @@ dependencies {
     
     // MapStruct with Lombok integration
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-
-    implementation project(':bootstrap')
 }
