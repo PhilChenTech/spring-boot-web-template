@@ -1,5 +1,11 @@
 # Spring Boot DDD 多模組專案
 
+## 專案配置
+- **Java 版本**: 21 (升級自 Java 17)
+- **Spring Boot**: 3.2.1
+- **Gradle**: 8.x
+- **架構**: DDD (Domain-Driven Design) 多模組
+
 ## 專案修正總結
 
 ### 1. 解決的問題
@@ -51,10 +57,19 @@ springboot-web-template/
 ├── application/         # 應用服務層
 ├── domain/             # 領域模型層
 ├── infrastructure/     # 基礎設施層
-└── common/            # 共用組件
+├── common/            # 共用組件
+├── gradle.properties  # Gradle 優化配置
+└── start-app.bat      # 快速啟動腳本
 ```
 
-### 6. 避免 Gradle 卡住的技巧
+### 6. Java 21 升級說明
+✅ **已升級至 Java 21**
+- 編譯目標: `sourceCompatibility = '21'`
+- 運行環境: `targetCompatibility = '21'`
+- 兼容性: Spring Boot 3.2.1 完全支援 Java 21
+- 性能提升: Java 21 LTS 版本，提供更好的性能和安全性
+
+### 7. 避免 Gradle 卡住的技巧
 
 #### `--no-daemon` 參數詳解
 ```bash
