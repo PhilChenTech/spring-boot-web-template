@@ -34,6 +34,15 @@ public class SecurityConfig {
                 // 禁用 CSRF（對於 API 應用程式）
                 .csrf(AbstractHttpConfigurer::disable)
                 
+                // 禁用基本認證
+                .httpBasic(AbstractHttpConfigurer::disable)
+                
+                // 禁用表單登入
+                .formLogin(AbstractHttpConfigurer::disable)
+                
+                // 禁用登出
+                .logout(AbstractHttpConfigurer::disable)
+                
                 // CORS 設定
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 
@@ -45,25 +54,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 
-                // 授權設定
+                // 授權設定 - 允許所有請求通過
                 .authorizeHttpRequests(auth -> auth
-                        // 允許公開端點
-                        .requestMatchers(
-                                "/api/public/**",
-                                "/actuator/health",
-                                "/actuator/info",
-                                "/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api/v1/users/**",  // 允許用戶 API 端點無需認證
-                                "/api/users/**"      // 允許用戶 API 端點無需認證（兼容測試路徑）
-                        ).permitAll()
-                        
-                        // 管理員端點需要認證
-                        .requestMatchers("/api/admin/**").authenticated()
-                        
-                        // 允許其他所有請求（可根據需要調整）
+                        // 允許所有請求無需認證
                         .anyRequest().permitAll()
                 );
 
