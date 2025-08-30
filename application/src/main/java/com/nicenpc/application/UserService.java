@@ -45,7 +45,7 @@ public class UserService {
         
         // 檢查email是否已存在
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email already exists: " + email);
+            throw new IllegalArgumentException("電子郵件已存在: " + email);
         }
         
         return userRepository.save(user);

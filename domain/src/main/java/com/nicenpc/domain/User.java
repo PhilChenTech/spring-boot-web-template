@@ -1,5 +1,6 @@
 package com.nicenpc.domain;
 
+import com.nicenpc.domain.exception.UserValidationException;
 import java.util.Objects;
 
 /**
@@ -31,10 +32,10 @@ public class User {
     
     public void validate() {
         if (!isValidName()) {
-            throw new IllegalArgumentException("Invalid user name");
+            throw new UserValidationException("使用者名稱不能為空且長度不得超過100字元");
         }
         if (!isValidEmail()) {
-            throw new IllegalArgumentException("Invalid email format");
+            throw new UserValidationException("電子郵件格式不正確，必須包含@符號且長度大於3字元");
         }
     }
     

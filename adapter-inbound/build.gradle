@@ -3,7 +3,16 @@ dependencies {
     implementation project(":application")
     implementation project(":domain")
     implementation project(":common")
-    runtimeOnly project(":infrastructure")
+    // 移除直接依賴 infrastructure，通過 bootstrap 組裝
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Lombok for adapter layer
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    
+    // MapStruct with Lombok integration
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 }

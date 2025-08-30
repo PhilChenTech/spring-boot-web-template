@@ -1,7 +1,7 @@
 dependencies {
     implementation project(":adapter-outbound")
     implementation project(":domain")
-    implementation project(":application")
+    // 移除對application層的直接依賴，保持依賴方向正確
     implementation project(":common")
 
     // Spring Boot core dependencies
