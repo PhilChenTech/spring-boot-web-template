@@ -5,14 +5,79 @@ spring:
   
   profiles:
     active: web  # 預設為 web 模式
+  
+  # 公共資料庫配置
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:springboot_template_db}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:test}
+  
+  # JPA 通用設定
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: ${JPA_FORMAT_SQL:false}
+        use_sql_comments: ${JPA_SQL_COMMENTS:false}
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  # 安全配置
+  security:
+    user:
+      name: ${SECURITY_USER_NAME:admin}
+      password: ${SECURITY_USER_PASSWORD:admin123}
+      roles: ${SECURITY_USER_ROLES:ADMIN}
 
+# 日誌通用設定
 logging:
   level:
-    com.nicenpc: DEBUG
-    root: INFO
+    com.nicenpc: ${LOG_LEVEL_APP:INFO}
+    root: ${LOG_LEVEL_ROOT:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
 
+# 服務器通用設定
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: ${SERVER_SHUTDOWN:immediate}
+
+# 監控端點配置
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,env,configprops
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when-authorized}
+      group:
+        custom:
+          include: database,application
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+
+# 應用程式資訊
+info:
+  app:
+    name: Nice NPC Spring Boot DDD Template
+    description: 基於 Clean Architecture 和 DDD 原則的 Spring Boot 模板專案
+    version: 1.0.0
+    author: Nice NPC Team
+  build:
+    artifact: ${project.artifactId:springboot-web-template}
+    name: ${project.name:Nice NPC Spring Boot Template}
+    time: ${maven.build.timestamp:unknown}
+    version: ${project.version:1.0.0}
+

@@ -21,6 +21,15 @@ dependencies {
     // Web starter（需要用於 SERVLET 模式）
     implementation 'org.springframework.boot:spring-boot-starter-web'
     
+    // Security starter
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // Actuator for health checks
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // OpenAPI documentation
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    
     // 可選的適配器依賴
     runtimeOnly project(":adapter-web")
     runtimeOnly project(":adapter-desktop")

@@ -1,20 +1,15 @@
+# 生產環境配置
 spring:
-  # 生產環境 PostgreSQL 資料庫設定
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:springboot_template_db_prod}
-    driver-class-name: org.postgresql.Driver
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:test}
     hikari:
       connection-timeout: 20000
-      maximum-pool-size: 10
-      minimum-idle: 5
+      maximum-pool-size: 20
+      minimum-idle: 10
       idle-timeout: 300000
       leak-detection-threshold: 60000
   
-  # JPA 設定
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: false
@@ -22,18 +17,30 @@ spring:
       hibernate:
         format_sql: false
         use_sql_comments: false
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
 
-# 日誌設定
+# 生產環境日誌設定
 logging:
   level:
-    org.hibernate.SQL: WARN
     com.nicenpc: INFO
     root: INFO
+    org.hibernate.SQL: WARN
 
-# 生產環境設定
+# 生產環境服務器設定
 server:
-  port: 8080
   shutdown: graceful
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+
+# 生產環境監控
+management:
+  endpoint:
+    health:
+      show-details: when-authorized
+  endpoints:
+    web:
+      exposure:
+        include: health,info
