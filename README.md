@@ -1,10 +1,18 @@
 # Spring Boot DDD 多模組專案
 
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
+
+一個基於 Domain-Driven Design (DDD) 架構的 Spring Boot 多模組專案模板，適合用作微服務或複雜業務系統的起始專案。
+
 ## 專案配置
-- **Java 版本**: 21 (升級自 Java 17)
+- **Java 版本**: 21 (LTS)
 - **Spring Boot**: 3.2.1
 - **Gradle**: 8.x
 - **架構**: DDD (Domain-Driven Design) 多模組
+- **許可證**: MIT License
 
 ## 專案修正總結
 
@@ -97,3 +105,55 @@ springboot-web-template/
 3. 直接執行 JAR 檔案：`java -jar *.jar`
 4. 配置適當的 JVM 記憶體設定
 5. 監控 daemon 狀態：`.\gradlew.bat --status`
+
+## 快速開始
+
+### 1. 複製專案
+```bash
+git clone https://github.com/PhilChenTech/spring-boot-web-template.git
+cd spring-boot-web-template
+```
+
+### 2. 建置專案
+```bash
+# 建議使用 --no-daemon 避免卡住
+.\gradlew.bat --no-daemon clean build -x test
+```
+
+### 3. 啟動應用程式
+```bash
+# 方法一：使用批次檔
+start-app.bat
+
+# 方法二：直接執行 JAR
+java -jar adapter-inbound\build\libs\adapter-inbound-1.0.0.jar
+```
+
+### 4. 測試 API
+- 健康檢查：http://localhost:8080/api/health
+- 歡迎頁面：http://localhost:8080/api/
+- 用戶 API：http://localhost:8080/api/users
+
+## 貢獻指南
+
+我們歡迎任何形式的貢獻！請參考以下步驟：
+
+1. Fork 此專案
+2. 創建您的功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的變更 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 開啟一個 Pull Request
+
+## 許可證
+
+此專案採用 MIT 許可證 - 詳情請參閱 [LICENSE](LICENSE) 檔案。
+
+## 聯絡方式
+
+如果您有任何問題或建議，歡迎：
+- 開啟 [Issue](https://github.com/PhilChenTech/spring-boot-web-template/issues)
+- 聯絡專案維護者：[@PhilChenTech](https://github.com/PhilChenTech)
+
+## 致謝
+
+感謝所有為此專案做出貢獻的開發者！
