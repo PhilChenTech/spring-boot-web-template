@@ -2,26 +2,31 @@ package com.nicenpc.adapteroutbound.mapper;
 
 import com.nicenpc.domain.User;
 import com.nicenpc.adapteroutbound.entity.UserEntity;
-import lombok.experimental.UtilityClass;
+import com.nicenpc.common.mapper.MapStructConfig;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
 
 /**
  * 使用者映射器
  * 負責 Domain 實體與 JPA 實體之間的轉換
+ * 使用 MapStruct 自動生成映射程式碼
  */
-@UtilityClass
-public class UserMapper {
+@Mapper(config = MapStructConfig.class)
+public interface UserMapper {
     
-    public static User toDomain(UserEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        return new User(entity.getId(), entity.getName(), entity.getEmail());
-    }
+    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
     
-    public static UserEntity toEntity(User domain) {
-        if (domain == null) {
-            return null;
-        }
-        return new UserEntity(domain.getId(), domain.getName(), domain.getEmail());
-    }
+    /**
+     * 將 JPA 實體轉換為領域實體
+     * @param entity JPA 實體
+     * @return 領域實體
+     */
+    User toDomain(UserEntity entity);
+    
+    /**
+     * 將領域實體轉換為 JPA 實體
+     * @param domain 領域實體
+     * @return JPA 實體
+     */
+    UserEntity toEntity(User domain);
 }

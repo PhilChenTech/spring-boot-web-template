@@ -33,9 +33,17 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         
+        // MapStruct 依賴 - 在所有子專案中可用
+        implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+        annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+        
+        // MapStruct 與 Lombok 整合配置
+        annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+        
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testCompileOnly 'org.projectlombok:lombok'
         testAnnotationProcessor 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
     }
 
     test {

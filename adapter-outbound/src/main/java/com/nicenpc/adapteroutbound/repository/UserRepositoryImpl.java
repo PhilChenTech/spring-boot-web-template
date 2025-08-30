@@ -22,30 +22,30 @@ public class UserRepositoryImpl implements UserRepository {
     
     @Override
     public User save(User user) {
-        return UserMapper.toDomain(userJpaRepository.save(UserMapper.toEntity(user)));
+        return UserMapper.INSTANCE.toDomain(userJpaRepository.save(UserMapper.INSTANCE.toEntity(user)));
     }
     
     @Override
     public Optional<User> findById(Long id) {
-        return userJpaRepository.findById(id).map(UserMapper::toDomain);
+        return userJpaRepository.findById(id).map(UserMapper.INSTANCE::toDomain);
     }
     
     @Override
     public Optional<User> findByEmail(String email) {
-        return userJpaRepository.findByEmail(email).map(UserMapper::toDomain);
+        return userJpaRepository.findByEmail(email).map(UserMapper.INSTANCE::toDomain);
     }
     
     @Override
     public List<User> findAll() {
         return userJpaRepository.findAll().stream()
-                .map(UserMapper::toDomain)
+                .map(UserMapper.INSTANCE::toDomain)
                 .collect(Collectors.toList());
     }
     
     @Override
     public List<User> findByNameContainingIgnoreCase(String name) {
         return userJpaRepository.findByNameContainingIgnoreCase(name).stream()
-                .map(UserMapper::toDomain)
+                .map(UserMapper.INSTANCE::toDomain)
                 .collect(Collectors.toList());
     }
     
@@ -77,7 +77,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public List<User> findByEmailDomain(String domain) {
         return userJpaRepository.findByEmailDomain(domain).stream()
-                .map(UserMapper::toDomain)
+                .map(UserMapper.INSTANCE::toDomain)
                 .collect(Collectors.toList());
     }
 }
