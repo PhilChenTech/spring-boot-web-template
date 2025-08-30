@@ -1,0 +1,18 @@
+# 通用應用程式配置
+spring:
+  application:
+    name: nice-npc-flexible-app
+  
+  profiles:
+    active: web  # 預設為 web 模式
+
+logging:
+  level:
+    com.nicenpc: DEBUG
+    root: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,13 @@
+# 批次處理應用程式配置
+spring:
+  main:
+    web-application-type: none
+  
+  batch:
+    job:
+      enabled: true
+    initialize-schema: always
+
+# 排程配置
+scheduling:
+  enabled: true

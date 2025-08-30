@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    implementation project(":application")
+    implementation project(":domain")
+    implementation project(":common")
+    
+    // JavaFX 或 Swing 相關依賴
+    implementation 'org.openjfx:javafx-controls:21'
+    implementation 'org.openjfx:javafx-fxml:21'
+    
+    // 或者使用 Swing
+    // implementation 'com.formdev:flatlaf:3.2.5'
+}

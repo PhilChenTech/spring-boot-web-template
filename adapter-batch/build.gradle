@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    implementation project(":application")
+    implementation project(":domain")
+    implementation project(":common")
+    
+    // 批次處理相關依賴
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework:spring-context-support'
+}

@@ -1,4 +1,4 @@
-package com.nicenpc.infrastructure.config;
+package com.nicenpc.bootstrap.config;
 
 import jakarta.persistence.Entity;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

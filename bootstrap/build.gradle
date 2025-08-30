@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    implementation project(":application")
+    implementation project(":domain")
+    implementation project(":common")
+    
+    // 根據需要動態引入不同的適配器
+    runtimeOnly project(":infrastructure")
+    runtimeOnly project(":adapter-inbound")
+    runtimeOnly project(":adapter-outbound")
+    
+    // 基礎 Spring Boot starter
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    
+    // Web starter（需要用於 SERVLET 模式）
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // 可選的適配器依賴
+    runtimeOnly project(":adapter-web")
+    runtimeOnly project(":adapter-desktop")
+    runtimeOnly project(":adapter-batch")
+}
+
+// 配置主類
+bootJar {
+    mainClass = 'com.nicenpc.bootstrap.Application'
+    archiveClassifier = ''
+}
+
+jar {
+    enabled = false
+}
