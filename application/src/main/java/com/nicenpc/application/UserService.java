@@ -3,6 +3,8 @@ package com.nicenpc.application;
 import com.nicenpc.application.bus.CommandBus;
 import com.nicenpc.application.bus.QueryBus;
 import com.nicenpc.application.command.CreateUserCommand;
+import com.nicenpc.application.command.UpdateUserCommand;
+import com.nicenpc.application.command.DeleteUserCommand;
 import com.nicenpc.application.command.DeleteAllUsersCommand;
 import com.nicenpc.application.query.*;
 import com.nicenpc.domain.User;
@@ -53,5 +55,14 @@ public class UserService {
 
     public boolean existsByEmail(String email) {
         return queryBus.send(new ExistsByEmailQuery(email));
+    }
+    
+    public User updateUser(Long userId, String name, String email) {
+        commandBus.send(new UpdateUserCommand(userId, name, email));
+        return getUserById(userId);
+    }
+    
+    public void deleteUser(Long userId) {
+        commandBus.send(new DeleteUserCommand(userId));
     }
 }

@@ -23,6 +23,8 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
     
     private final Timer userCreationTimer;
     private final Timer userQueryTimer;
+    private final Timer userUpdateTimer;
+    private final Timer userDeleteTimer;
     private final Timer databaseOperationTimer;
     
     private final AtomicLong activeUsers = new AtomicLong(0);
@@ -66,6 +68,14 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
         
         this.userQueryTimer = Timer.builder("user.query.time")
                 .description("使用者查詢耗時")
+                .register(meterRegistry);
+        
+        this.userUpdateTimer = Timer.builder("user.update.time")
+                .description("使用者更新耗時")
+                .register(meterRegistry);
+        
+        this.userDeleteTimer = Timer.builder("user.delete.time")
+                .description("使用者刪除耗時")
                 .register(meterRegistry);
         
         this.databaseOperationTimer = Timer.builder("database.operation.time")
@@ -161,6 +171,32 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
     public void stopUserQueryTimer(TimerSample sample) {
         if (sample instanceof TimerSampleImpl impl) {
             impl.sample.stop(userQueryTimer);
+        }
+    }
+    
+    @Override
+    public TimerSample startUserUpdateTimer() {
+        Timer.Sample sample = Timer.start();
+        return new TimerSampleImpl(sample);
+    }
+    
+    @Override
+    public void stopUserUpdateTimer(TimerSample sample) {
+        if (sample instanceof TimerSampleImpl impl) {
+            impl.sample.stop(userUpdateTimer);
+        }
+    }
+    
+    @Override
+    public TimerSample startUserDeleteTimer() {
+        Timer.Sample sample = Timer.start();
+        return new TimerSampleImpl(sample);
+    }
+    
+    @Override
+    public void stopUserDeleteTimer(TimerSample sample) {
+        if (sample instanceof TimerSampleImpl impl) {
+            impl.sample.stop(userDeleteTimer);
         }
     }
     

@@ -26,6 +26,14 @@ public interface ApplicationMetrics {
     
     void stopUserQueryTimer(TimerSample sample);
     
+    TimerSample startUserUpdateTimer();
+    
+    void stopUserUpdateTimer(TimerSample sample);
+    
+    TimerSample startUserDeleteTimer();
+    
+    void stopUserDeleteTimer(TimerSample sample);
+    
     TimerSample startDatabaseOperationTimer();
     
     void stopDatabaseOperationTimer(TimerSample sample);

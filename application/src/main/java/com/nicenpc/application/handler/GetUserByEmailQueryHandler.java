@@ -20,7 +20,7 @@ public class GetUserByEmailQueryHandler implements QueryHandler<GetUserByEmailQu
     private final ApplicationMetrics applicationMetrics;
     
     @Override
-    @Cacheable(value = "users", key = "#query.email")
+    @Cacheable(value = "users", key = "'email:' + #p0.email", unless = "#result == null")
     @Transactional(readOnly = true)
     public User handle(GetUserByEmailQuery query) {
         applicationMetrics.incrementUserQuery();

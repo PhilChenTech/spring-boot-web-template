@@ -130,12 +130,8 @@ public class UserController {
             @Parameter(description = "更新使用者的請求資料", required = true)
             @Valid @RequestBody CreateUserRequest request) {
         
-        // 先檢查使用者是否存在
-        userService.getUserById(id);
-        
-        // 更新使用者（這裡簡化實現，實際應該有專門的更新方法）
-        User updatedUser = userService.createUser(request.getName(), request.getEmail());
-        updatedUser.setId(id); // 設定ID確保是更新操作
+        // 更新使用者
+        User updatedUser = userService.updateUser(id, request.getName(), request.getEmail());
         
         UserResponse response = UserDTOMapper.INSTANCE.toResponse(updatedUser);
         
@@ -162,11 +158,8 @@ public class UserController {
             @Parameter(description = "使用者 ID", required = true, example = "1")
             @PathVariable Long id) {
         
-        // 先檢查使用者是否存在
-        userService.getUserById(id);
-        
-        // 刪除使用者（這裡簡化實現，實際應該有專門的刪除方法）
-        // userService.deleteUser(id);
+        // 刪除使用者
+        userService.deleteUser(id);
         
         ApiResponse<Void> apiResponse = ApiResponse.success("使用者刪除成功");
         

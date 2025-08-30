@@ -1,0 +1,386 @@
+warning: in the working copy of 'application/src/main/java/com/nicenpc/application/UserService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'application/src/main/java/com/nicenpc/application/handler/ExistsByEmailQueryHandler.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/adapter-inbound/src/main/java/com/nicenpc/adapterinbound/controller/UserController.java b/adapter-inbound/src/main/java/com/nicenpc/adapterinbound/controller/UserController.java
+index 698d743..979b6b3 100644
+--- a/adapter-inbound/src/main/java/com/nicenpc/adapterinbound/controller/UserController.java
++++ b/adapter-inbound/src/main/java/com/nicenpc/adapterinbound/controller/UserController.java
+@@ -130,12 +130,8 @@ public class UserController {
+             @Parameter(description = "更新使用者的請求資料", required = true)
+             @Valid @RequestBody CreateUserRequest request) {
+
+-        // 先檢查使用者是否存在
+-        userService.getUserById(id);
+-
+-        // 更新使用者（這裡簡化實現，實際應該有專門的更新方法）
+-        User updatedUser = userService.createUser(request.getName(), request.getEmail());
+-        updatedUser.setId(id); // 設定ID確保是更新操作
++        // 更新使用者
++        User updatedUser = userService.updateUser(id, request.getName(), request.getEmail());
+
+         UserResponse response = UserDTOMapper.INSTANCE.toResponse(updatedUser);
+
+@@ -162,11 +158,8 @@ public class UserController {
+             @Parameter(description = "使用者 ID", required = true, example = "1")
+             @PathVariable Long id) {
+
+-        // 先檢查使用者是否存在
+-        userService.getUserById(id);
+-
+-        // 刪除使用者（這裡簡化實現，實際應該有專門的刪除方法）
+-        // userService.deleteUser(id);
++        // 刪除使用者
++        userService.deleteUser(id);
+
+         ApiResponse<Void> apiResponse = ApiResponse.success("使用者刪除成功");
+
+diff --git a/application/src/main/java/com/nicenpc/application/UserService.java b/application/src/main/java/com/nicenpc/application/UserService.java
+index 7738e39..3d5ed26 100644
+--- a/application/src/main/java/com/nicenpc/application/UserService.java
++++ b/application/src/main/java/com/nicenpc/application/UserService.java
+@@ -3,6 +3,8 @@ package com.nicenpc.application;
+ import com.nicenpc.application.bus.CommandBus;
+ import com.nicenpc.application.bus.QueryBus;
+ import com.nicenpc.application.command.CreateUserCommand;
++import com.nicenpc.application.command.UpdateUserCommand;
++import com.nicenpc.application.command.DeleteUserCommand;
+ import com.nicenpc.application.command.DeleteAllUsersCommand;
+ import com.nicenpc.application.query.*;
+ import com.nicenpc.domain.User;
+@@ -54,4 +56,13 @@ public class UserService {
+     public boolean existsByEmail(String email) {
+         return queryBus.send(new ExistsByEmailQuery(email));
+     }
++
++    public User updateUser(Long userId, String name, String email) {
++        commandBus.send(new UpdateUserCommand(userId, name, email));
++        return getUserById(userId);
++    }
++
++    public void deleteUser(Long userId) {
++        commandBus.send(new DeleteUserCommand(userId));
++    }
+ }
+\ No newline at end of file
+diff --git a/application/src/main/java/com/nicenpc/application/bus/CommandBus.java b/application/src/main/java/com/nicenpc/application/bus/CommandBus.java
+index 32bb592..62e6cab 100644
+--- a/application/src/main/java/com/nicenpc/application/bus/CommandBus.java
++++ b/application/src/main/java/com/nicenpc/application/bus/CommandBus.java
+@@ -37,9 +37,11 @@ public class CommandBus {
+         handler.handle(command);
+     }
+
++    @SuppressWarnings("unchecked")
+     private CommandHandler<?> findHandler(Class<?> commandClass) {
+-        Map<String, CommandHandler> handlers = applicationContext.getBeansOfType(CommandHandler.class);
+-
++        Map<String, CommandHandler<?>> handlers =
++            (Map<String, CommandHandler<?>>) (Map<String, ?>) applicationContext.getBeansOfType(CommandHandler.class);
++
+         return handlers.values().stream()
+             .filter(handler -> canHandle(handler, commandClass))
+             .findFirst()
+@@ -47,20 +49,64 @@ public class CommandBus {
+     }
+
+     private boolean canHandle(CommandHandler<?> handler, Class<?> commandClass) {
+-        Type[] genericInterfaces = handler.getClass().getGenericInterfaces();
+-
++        // 獲取實際的類別（處理 Spring 代理類）
++        Class<?> actualClass = getActualClass(handler);
++
++        // 檢查所有泛型接口和父類
++        return checkGenericTypes(actualClass, commandClass);
++    }
++
++    /**
++     * 獲取實際的類別，處理 Spring CGLIB 代理
++     */
++    private Class<?> getActualClass(Object obj) {
++        Class<?> clazz = obj.getClass();
++
++        // 如果是 CGLIB 代理類，獲取父類
++        if (clazz.getName().contains("$$")) {
++            return clazz.getSuperclass();
++        }
++
++        return clazz;
++    }
++
++    /**
++     * 遞歸檢查類別及其父類的泛型類型
++     */
++    private boolean checkGenericTypes(Class<?> clazz, Class<?> commandClass) {
++        if (clazz == null || clazz == Object.class) {
++            return false;
++        }
++
++        // 檢查直接實現的介面
++        Type[] genericInterfaces = clazz.getGenericInterfaces();
+         for (Type genericInterface : genericInterfaces) {
+-            if (genericInterface instanceof ParameterizedType parameterizedType) {
+-                Type rawType = parameterizedType.getRawType();
+-                if (rawType.equals(CommandHandler.class)) {
+-                    Type[] typeArguments = parameterizedType.getActualTypeArguments();
+-                    if (typeArguments.length > 0 && typeArguments[0].equals(commandClass)) {
+-                        return true;
+-                    }
+-                }
++            if (matchesCommandHandler(genericInterface, commandClass)) {
++                return true;
++            }
++        }
++
++        // 檢查父類的泛型類型
++        Type genericSuperclass = clazz.getGenericSuperclass();
++        if (matchesCommandHandler(genericSuperclass, commandClass)) {
++            return true;
++        }
++
++        // 遞歸檢查父類
++        return checkGenericTypes(clazz.getSuperclass(), commandClass);
++    }
++
++    /**
++     * 檢查給定的類型是否匹配 CommandHandler<指定命令類型>
++     */
++    private boolean matchesCommandHandler(Type type, Class<?> commandClass) {
++        if (type instanceof ParameterizedType parameterizedType) {
++            Type rawType = parameterizedType.getRawType();
++            if (rawType.equals(CommandHandler.class)) {
++                Type[] typeArguments = parameterizedType.getActualTypeArguments();
++                return typeArguments.length > 0 && typeArguments[0].equals(commandClass);
+             }
+         }
+-
+         return false;
+     }
+ }
+\ No newline at end of file
+diff --git a/application/src/main/java/com/nicenpc/application/bus/QueryBus.java b/application/src/main/java/com/nicenpc/application/bus/QueryBus.java
+index c0ce58f..670d6d3 100644
+--- a/application/src/main/java/com/nicenpc/application/bus/QueryBus.java
++++ b/application/src/main/java/com/nicenpc/application/bus/QueryBus.java
+@@ -1,7 +1,11 @@
+ package com.nicenpc.application.bus;
+
+ import com.nicenpc.application.handler.QueryHandler;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.aop.support.AopUtils;
+ import org.springframework.context.ApplicationContext;
++import org.springframework.core.ResolvableType;
+ import org.springframework.stereotype.Component;
+
+ import java.lang.reflect.ParameterizedType;
+@@ -16,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
+ @Component
+ public class QueryBus {
+
++    private static final Logger log = LoggerFactory.getLogger(QueryBus.class);
++
+     private final ApplicationContext applicationContext;
+     private final Map<Class<?>, QueryHandler<?, ?>> handlerCache = new ConcurrentHashMap<>();
+
+@@ -25,21 +31,28 @@ public class QueryBus {
+
+     @SuppressWarnings("unchecked")
+     public <Q, R> R send(Q query) {
+-        QueryHandler<Q, R> handler = (QueryHandler<Q, R>) handlerCache.computeIfAbsent(
+-            query.getClass(),
+-            this::findHandler
+-        );
+-
++        QueryHandler<Q, R> handler = (QueryHandler<Q, R>) handlerCache.computeIfAbsent(query.getClass(), qc -> {
++            QueryHandler<?, ?> found = findHandler(qc);
++            if (found == null) {
++                log.warn("handlerCache miss, still NOT found handler for {}", qc.getSimpleName());
++            } else {
++                log.debug("handlerCache populated for {} -> {}", qc.getSimpleName(), found.getClass().getName());
++            }
++            return found;
++        });
+         if (handler == null) {
+             throw new IllegalArgumentException("沒有找到處理 " + query.getClass().getSimpleName() + " 的處理器");
+         }
+-
+         return handler.handle(query);
+     }
+
+     private QueryHandler<?, ?> findHandler(Class<?> queryClass) {
+         Map<String, QueryHandler> handlers = applicationContext.getBeansOfType(QueryHandler.class);
+
++        log.info("DEBUG: Looking for handler for {}", queryClass.getSimpleName());
++        log.info("DEBUG: Found {} query handlers:", handlers.size());
++        handlers.forEach((name, handler) -> log.info("  - {}: {}", name, handler.getClass().getName()));
++
+         return handlers.values().stream()
+             .filter(handler -> canHandle(handler, queryClass))
+             .findFirst()
+@@ -47,20 +60,33 @@ public class QueryBus {
+     }
+
+     private boolean canHandle(QueryHandler<?, ?> handler, Class<?> queryClass) {
+-        Type[] genericInterfaces = handler.getClass().getGenericInterfaces();
+-
++        // 先嘗試使用 Spring ResolvableType 解析實際目標類（解決 @Transactional 產生的 CGLIB 代理）
++        Class<?> targetClass = AopUtils.getTargetClass(handler);
++        ResolvableType resolvable = ResolvableType.forClass(targetClass).as(QueryHandler.class);
++        if (resolvable != ResolvableType.NONE) {
++            Class<?> resolvedQueryType = resolvable.getGeneric(0).resolve();
++            if (resolvedQueryType != null) {
++                boolean match = resolvedQueryType.equals(queryClass);
++                log.debug("canHandle (ResolvableType) targetClass={} queryType={} candidate={} match={}",
++                    targetClass.getName(), resolvedQueryType.getSimpleName(), queryClass.getSimpleName(), match);
++                if (match) return true;
++            }
++        }
++        // 回退舊有反射邏輯（多數非代理類仍可用）
++        Type[] genericInterfaces = targetClass.getGenericInterfaces();
+         for (Type genericInterface : genericInterfaces) {
+             if (genericInterface instanceof ParameterizedType parameterizedType) {
+                 Type rawType = parameterizedType.getRawType();
+                 if (rawType.equals(QueryHandler.class)) {
+                     Type[] typeArguments = parameterizedType.getActualTypeArguments();
+                     if (typeArguments.length > 0 && typeArguments[0].equals(queryClass)) {
++                        log.debug("canHandle (fallback) targetClass={} matched via ParameterizedType", targetClass.getName());
+                         return true;
+                     }
+                 }
+             }
+         }
+-
++        log.debug("canHandle NO targetClass={} queryClass={}", targetClass.getName(), queryClass.getSimpleName());
+         return false;
+     }
+ }
+\ No newline at end of file
+diff --git a/application/src/main/java/com/nicenpc/application/handler/ExistsByEmailQueryHandler.java b/application/src/main/java/com/nicenpc/application/handler/ExistsByEmailQueryHandler.java
+index da702eb..b4e99fb 100644
+--- a/application/src/main/java/com/nicenpc/application/handler/ExistsByEmailQueryHandler.java
++++ b/application/src/main/java/com/nicenpc/application/handler/ExistsByEmailQueryHandler.java
+@@ -1,6 +1,7 @@
+ package com.nicenpc.application.handler;
+
+ import com.nicenpc.application.query.ExistsByEmailQuery;
++import com.nicenpc.application.metrics.ApplicationMetrics;
+ import com.nicenpc.domain.repository.UserRepository;
+ import lombok.RequiredArgsConstructor;
+ import org.springframework.stereotype.Component;
+@@ -11,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
+ public class ExistsByEmailQueryHandler implements QueryHandler<ExistsByEmailQuery, Boolean> {
+
+     private final UserRepository userRepository;
++    private final ApplicationMetrics applicationMetrics;
+
+     @Override
+     @Transactional(readOnly = true)
+     public Boolean handle(ExistsByEmailQuery query) {
++        applicationMetrics.incrementUserQuery();
+         return userRepository.existsByEmail(query.getEmail());
+     }
+ }
+diff --git a/application/src/main/java/com/nicenpc/application/handler/GetUserByEmailQueryHandler.java b/application/src/main/java/com/nicenpc/application/handler/GetUserByEmailQueryHandler.java
+index 1e09157..fc19665 100644
+--- a/application/src/main/java/com/nicenpc/application/handler/GetUserByEmailQueryHandler.java
++++ b/application/src/main/java/com/nicenpc/application/handler/GetUserByEmailQueryHandler.java
+@@ -20,7 +20,7 @@ public class GetUserByEmailQueryHandler implements QueryHandler<GetUserByEmailQu
+     private final ApplicationMetrics applicationMetrics;
+
+     @Override
+-    @Cacheable(value = "users", key = "#query.email")
++    @Cacheable(value = "users", key = "'email:' + #p0.email", unless = "#result == null")
+     @Transactional(readOnly = true)
+     public User handle(GetUserByEmailQuery query) {
+         applicationMetrics.incrementUserQuery();
+diff --git a/application/src/main/java/com/nicenpc/application/metrics/ApplicationMetrics.java b/application/src/main/java/com/nicenpc/application/metrics/ApplicationMetrics.java
+index 896672b..e1f3e23 100644
+--- a/application/src/main/java/com/nicenpc/application/metrics/ApplicationMetrics.java
++++ b/application/src/main/java/com/nicenpc/application/metrics/ApplicationMetrics.java
+@@ -26,6 +26,14 @@ public interface ApplicationMetrics {
+
+     void stopUserQueryTimer(TimerSample sample);
+
++    TimerSample startUserUpdateTimer();
++
++    void stopUserUpdateTimer(TimerSample sample);
++
++    TimerSample startUserDeleteTimer();
++
++    void stopUserDeleteTimer(TimerSample sample);
++
+     TimerSample startDatabaseOperationTimer();
+
+     void stopDatabaseOperationTimer(TimerSample sample);
+diff --git a/application/src/main/java/com/nicenpc/application/query/ExistsByEmailQueryHandler.java b/application/src/main/java/com/nicenpc/application/query/ExistsByEmailQueryHandler.java
+index e69de29..0d555c2 100644
+--- a/application/src/main/java/com/nicenpc/application/query/ExistsByEmailQueryHandler.java
++++ b/application/src/main/java/com/nicenpc/application/query/ExistsByEmailQueryHandler.java
+@@ -0,0 +1,7 @@
++package com.nicenpc.application.query;
++
++// 佔位：原本這裡誤放一個重複的 ExistsByEmailQueryHandler 實作，已移除避免 Spring Bean 衝突。
++// 保留此檔提醒勿再新增同名處理器於本 package。
++class DisabledExistsByEmailQueryHandlerPlaceholder {
++    // 無邏輯。
++}
+diff --git a/bootstrap/src/main/java/com/nicenpc/bootstrap/metrics/ApplicationMetricsImpl.java b/bootstrap/src/main/java/com/nicenpc/bootstrap/metrics/ApplicationMetricsImpl.java
+index ca62819..2f8c644 100644
+--- a/bootstrap/src/main/java/com/nicenpc/bootstrap/metrics/ApplicationMetricsImpl.java
++++ b/bootstrap/src/main/java/com/nicenpc/bootstrap/metrics/ApplicationMetricsImpl.java
+@@ -23,6 +23,8 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
+
+     private final Timer userCreationTimer;
+     private final Timer userQueryTimer;
++    private final Timer userUpdateTimer;
++    private final Timer userDeleteTimer;
+     private final Timer databaseOperationTimer;
+
+     private final AtomicLong activeUsers = new AtomicLong(0);
+@@ -68,6 +70,14 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
+                 .description("使用者查詢耗時")
+                 .register(meterRegistry);
+
++        this.userUpdateTimer = Timer.builder("user.update.time")
++                .description("使用者更新耗時")
++                .register(meterRegistry);
++
++        this.userDeleteTimer = Timer.builder("user.delete.time")
++                .description("使用者刪除耗時")
++                .register(meterRegistry);
++
+         this.databaseOperationTimer = Timer.builder("database.operation.time")
+                 .description("資料庫操作耗時")
+                 .register(meterRegistry);
+@@ -164,6 +174,32 @@ public class ApplicationMetricsImpl implements ApplicationMetrics {
+         }
+     }
+
++    @Override
++    public TimerSample startUserUpdateTimer() {
++        Timer.Sample sample = Timer.start();
++        return new TimerSampleImpl(sample);
++    }
++
++    @Override
++    public void stopUserUpdateTimer(TimerSample sample) {
++        if (sample instanceof TimerSampleImpl impl) {
++            impl.sample.stop(userUpdateTimer);
++        }
++    }
++
++    @Override
++    public TimerSample startUserDeleteTimer() {
++        Timer.Sample sample = Timer.start();
++        return new TimerSampleImpl(sample);
++    }
++
++    @Override
++    public void stopUserDeleteTimer(TimerSample sample) {
++        if (sample instanceof TimerSampleImpl impl) {
++            impl.sample.stop(userDeleteTimer);
++        }
++    }
++
+     @Override
+     public TimerSample startDatabaseOperationTimer() {
+         Timer.Sample sample = Timer.start();

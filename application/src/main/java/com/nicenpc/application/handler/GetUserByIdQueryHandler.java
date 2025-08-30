@@ -21,7 +21,7 @@ public class GetUserByIdQueryHandler implements QueryHandler<GetUserByIdQuery, U
     private final ApplicationMetrics applicationMetrics;
     
     @Override
-    @Cacheable(value = "users", key = "#query.userId")
+    @Cacheable(value = "users", key = "'id:' + #p0.userId", unless = "#result == null")
     @Transactional(readOnly = true)
     public User handle(GetUserByIdQuery query) {
         applicationMetrics.incrementUserQuery();
