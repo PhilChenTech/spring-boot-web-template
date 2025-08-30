@@ -1,7 +1,7 @@
 package com.nicenpc.adapterinbound.controller;
 
+import com.nicenpc.application.UserService;
 import com.nicenpc.domain.User;
-import com.nicenpc.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,15 +14,15 @@ import java.util.Map;
 public class H2DemoController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     /**
      * 獲取資料庫統計信息
      */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getDatabaseStats() {
-        long totalUsers = userRepository.count();
-        List<User> allUsers = userRepository.findAll();
+        long totalUsers = userService.count();
+        List<User> allUsers = userService.getAllUsers();
         
         Map<String, Object> stats = Map.of(
             "totalUsers", totalUsers,
@@ -41,7 +41,7 @@ public class H2DemoController {
      */
     @GetMapping("/search-by-domain")
     public ResponseEntity<List<User>> searchByEmailDomain(@RequestParam String domain) {
-        List<User> users = userRepository.findByEmailDomain(domain);
+        List<User> users = userService.findByEmailDomain(domain);
         return ResponseEntity.ok(users);
     }
 
@@ -64,17 +64,14 @@ public class H2DemoController {
      */
     @DeleteMapping("/clear-all")
     public ResponseEntity<String> clearAllUsers() {
-        userRepository.deleteAll();
+        userService.deleteAll();
         return ResponseEntity.ok("所有用戶數據已清除");
     }
 
     private User createUserIfNotExists(String name, String email) {
-        if (!userRepository.existsByEmail(email)) {
-            User user = new User();
-            user.setName(name);
-            user.setEmail(email);
-            return userRepository.save(user);
+        if (!userService.existsByEmail(email)) {
+            return userService.createUser(name, email);
         }
-        return userRepository.findByEmail(email).orElse(null);
+        return userService.getUserByEmail(email);
     }
 }

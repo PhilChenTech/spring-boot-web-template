@@ -33,6 +33,11 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
+    @Transactional(readOnly = true)
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
     public User createUser(String name, String email) {
         // 檢查email是否已存在
         if (userRepository.existsByEmail(email)) {
@@ -44,5 +49,24 @@ public class UserService {
         user.setEmail(email);
         
         return userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public long count() {
+        return userRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> findByEmailDomain(String domain) {
+        return userRepository.findByEmailDomain(domain);
+    }
+
+    public void deleteAll() {
+        userRepository.deleteAll();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 }
