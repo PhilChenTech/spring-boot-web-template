@@ -48,26 +48,32 @@ public class CacheMetrics {
     }
     
     private void registerCacheStats(String cacheName, Cache<Object, Object> cache) {
+        // 使用唯一的標識符來避免重複註冊
+        String hitRateMetricName = "cache_hit_rate_" + cacheName.replace("-", "_");
+        String missCountMetricName = "cache_miss_count_" + cacheName.replace("-", "_");
+        String loadTimeMetricName = "cache_load_time_" + cacheName.replace("-", "_");
+        String evictionCountMetricName = "cache_eviction_count_" + cacheName.replace("-", "_");
+        
         // 快取命中率
-        Gauge.builder("cache.hit.rate", cache, c -> c.stats().hitRate())
+        Gauge.builder(hitRateMetricName, cache, c -> c.stats().hitRate())
                 .tag("cache", cacheName)
                 .description("快取命中率")
                 .register(meterRegistry);
         
         // 快取未命中數
-        Gauge.builder("cache.miss.count", cache, c -> (double) c.stats().missCount())
+        Gauge.builder(missCountMetricName, cache, c -> (double) c.stats().missCount())
                 .tag("cache", cacheName)
                 .description("快取未命中次數")
                 .register(meterRegistry);
         
         // 快取載入時間
-        Gauge.builder("cache.load.time", cache, c -> c.stats().averageLoadPenalty())
+        Gauge.builder(loadTimeMetricName, cache, c -> c.stats().averageLoadPenalty())
                 .tag("cache", cacheName)
                 .description("平均快取載入時間 (奈秒)")
                 .register(meterRegistry);
         
         // 快取逐出數量
-        Gauge.builder("cache.eviction.count", cache, c -> (double) c.stats().evictionCount())
+        Gauge.builder(evictionCountMetricName, cache, c -> (double) c.stats().evictionCount())
                 .tag("cache", cacheName)
                 .description("快取逐出次數")
                 .register(meterRegistry);

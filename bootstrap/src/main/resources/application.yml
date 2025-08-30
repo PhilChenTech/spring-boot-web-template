@@ -8,14 +8,14 @@ app:
   database:
     host: ${DB_HOST:localhost}
     port: ${DB_PORT:5432}
-    name: ${DB_NAME:springboot_template_db}
+    name: ${DB_NAME:springboot_template}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:test}
   
   # 統一安全配置
   security:
     admin-username: ${ADMIN_USERNAME:admin}
-    admin-password: ${ADMIN_PASSWORD} # 強制從環境變數讀取
+    admin-password: ${ADMIN_PASSWORD:change_me_in_production}
     admin-roles: ${ADMIN_ROLES:ADMIN}
   
   # 統一 CORS 配置
@@ -103,7 +103,7 @@ management:
       show-details: ${HEALTH_SHOW_DETAILS:when-authorized}
       group:
         custom:
-          include: database,application
+          include: db,diskSpace
     info:
       enabled: true
     prometheus:
