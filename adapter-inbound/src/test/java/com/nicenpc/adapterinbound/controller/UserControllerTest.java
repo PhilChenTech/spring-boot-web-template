@@ -1,9 +1,12 @@
 package com.nicenpc.adapterinbound.controller;
 
 import com.nicenpc.application.UserService;
+import com.nicenpc.application.bus.CommandBus;
+import com.nicenpc.application.bus.QueryBus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -14,10 +17,13 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
+
 /**
  * UserController 控制器測試
  */
-@WebMvcTest(UserController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class UserControllerTest {
 
     @Autowired
@@ -25,6 +31,12 @@ class UserControllerTest {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private CommandBus commandBus;
+
+    @MockBean
+    private QueryBus queryBus;
 
     @Test
     void testGetAllUsersEmpty() throws Exception {

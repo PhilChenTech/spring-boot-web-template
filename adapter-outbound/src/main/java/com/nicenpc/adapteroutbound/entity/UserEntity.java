@@ -28,6 +28,9 @@ public class UserEntity {
     
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private boolean active = true;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

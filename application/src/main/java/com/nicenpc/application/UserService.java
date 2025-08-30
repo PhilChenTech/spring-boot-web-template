@@ -3,14 +3,11 @@ package com.nicenpc.application;
 import com.nicenpc.application.bus.CommandBus;
 import com.nicenpc.application.bus.QueryBus;
 import com.nicenpc.application.command.CreateUserCommand;
-import com.nicenpc.application.query.GetAllUsersQuery;
-import com.nicenpc.application.query.GetUserByEmailQuery;
-import com.nicenpc.application.query.GetUserByIdQuery;
+import com.nicenpc.application.command.DeleteAllUsersCommand;
+import com.nicenpc.application.query.*;
 import com.nicenpc.domain.User;
-import com.nicenpc.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,12 +18,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    
+
     private final CommandBus commandBus;
     private final QueryBus queryBus;
-    
-    // 保留部分直接存取方法以維持現有API兼容性
-    private final UserRepository userRepository;
 
     public List<User> getAllUsers() {
         return queryBus.send(new GetAllUsersQuery());
@@ -41,31 +35,23 @@ public class UserService {
     }
 
     public User createUser(String name, String email) {
-        // 使用命令匯流排發送建立使用者指令
         commandBus.send(new CreateUserCommand(name, email));
-        
-        // 查詢剛建立的使用者（在實際應用中，可能需要返回建立的使用者ID）
         return getUserByEmail(email);
     }
 
-    // 保留一些直接方法以維持現有功能
-    @Transactional(readOnly = true)
     public long count() {
-        return userRepository.count();
+        return queryBus.send(new CountUsersQuery());
     }
 
-    @Transactional(readOnly = true)
     public List<User> findByEmailDomain(String domain) {
-        return userRepository.findByEmailDomain(domain);
+        return queryBus.send(new FindByEmailDomainQuery(domain));
     }
 
-    @Transactional
     public void deleteAll() {
-        userRepository.deleteAll();
+        commandBus.send(new DeleteAllUsersCommand());
     }
 
-    @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return queryBus.send(new ExistsByEmailQuery(email));
     }
 }

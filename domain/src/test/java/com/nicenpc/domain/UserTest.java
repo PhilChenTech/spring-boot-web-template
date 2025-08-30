@@ -19,9 +19,33 @@ class UserTest {
     }
 
     @Test
+    void testUserFactoryCreate() {
+        User user = User.create("John Doe", "john@example.com");
+
+        assertNull(user.getId()); // ID is not set by factory
+        assertEquals("John Doe", user.getName());
+        assertEquals("john@example.com", user.getEmail());
+    }
+
+    @Test
+    void testUserFactoryCreateInvalidEmail() {
+        assertThrows(UserValidationException.class, () -> {
+            User.create("John Doe", "invalid-email");
+        });
+    }
+
+    @Test
     void testValidEmail() {
         User user = new User();
         user.setEmail("test@example.com");
+        
+        assertTrue(user.isValidEmail());
+    }
+
+    @Test
+    void testValidEmailWithSubdomain() {
+        User user = new User();
+        user.setEmail("test@sub.example.com");
         
         assertTrue(user.isValidEmail());
     }
@@ -43,11 +67,38 @@ class UserTest {
     }
 
     @Test
-    void testInvalidEmailTooShort() {
+    void testInvalidEmailNoDomain() {
         User user = new User();
-        user.setEmail("a@b");
+        user.setEmail("test@");
         
         assertFalse(user.isValidEmail());
+    }
+
+    @Test
+    void testCanReceiveNotifications() {
+        User user = new User();
+        user.setEmail("test@example.com");
+        user.setActive(true);
+
+        assertTrue(user.canReceiveNotifications());
+    }
+
+    @Test
+    void testCannotReceiveNotificationsWhenInactive() {
+        User user = new User();
+        user.setEmail("test@example.com");
+        user.setActive(false);
+
+        assertFalse(user.canReceiveNotifications());
+    }
+
+    @Test
+    void testCannotReceiveNotificationsWithInvalidEmail() {
+        User user = new User();
+        user.setEmail("invalid-email");
+        user.setActive(true);
+
+        assertFalse(user.canReceiveNotifications());
     }
 
     @Test
