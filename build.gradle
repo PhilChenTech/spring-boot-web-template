@@ -40,11 +40,6 @@ subprojects {
         
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-        
-        // Testcontainers 依賴
-        testImplementation 'org.testcontainers:junit-jupiter'
-        testImplementation 'org.testcontainers:postgresql'
-        testImplementation platform('org.testcontainers:testcontainers-bom:1.19.3')
     }
 
     test {

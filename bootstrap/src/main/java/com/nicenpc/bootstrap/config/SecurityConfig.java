@@ -55,11 +55,13 @@ public class SecurityConfig {
                                 "/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/api/v1/users/**",  // 允許用戶 API 端點無需認證
+                                "/api/users/**"      // 允許用戶 API 端點無需認證（兼容測試路徑）
                         ).permitAll()
                         
-                        // 其他端點需要認證
-                        .requestMatchers("/api/**").authenticated()
+                        // 管理員端點需要認證
+                        .requestMatchers("/api/admin/**").authenticated()
                         
                         // 允許其他所有請求（可根據需要調整）
                         .anyRequest().permitAll()

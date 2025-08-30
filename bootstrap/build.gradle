@@ -16,7 +16,6 @@ dependencies {
     
     // 基礎 Spring Boot starter
     implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     
     // Web starter（需要用於 SERVLET 模式）
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -37,10 +36,6 @@ dependencies {
     // Caching support
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
-    
-    // Database migration
-    implementation 'org.flywaydb:flyway-core'
-    runtimeOnly 'org.postgresql:postgresql'
     
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
