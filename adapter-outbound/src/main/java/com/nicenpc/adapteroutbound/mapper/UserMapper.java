@@ -4,6 +4,7 @@ import com.nicenpc.domain.User;
 import com.nicenpc.adapteroutbound.entity.UserEntity;
 import com.nicenpc.common.mapper.MapStructConfig;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -21,6 +22,9 @@ public interface UserMapper {
      * @param entity JPA 實體
      * @return 領域實體
      */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "email", source = "email")
     User toDomain(UserEntity entity);
     
     /**
@@ -28,5 +32,10 @@ public interface UserMapper {
      * @param domain 領域實體
      * @return JPA 實體
      */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "email", source = "email")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     UserEntity toEntity(User domain);
 }

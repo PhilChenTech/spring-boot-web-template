@@ -1,0 +1,51 @@
+@echo off
+REM PostgreSQL 資料庫設定腳本
+
+echo 正在設定 PostgreSQL 資料庫...
+
+REM 檢查 PostgreSQL 是否已安裝
+where psql >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo 錯誤：找不到 psql 命令。請確認 PostgreSQL 已正確安裝並添加到 PATH 環境變數中。
+    echo 您可以從以下網址下載 PostgreSQL: https://www.postgresql.org/download/windows/
+    pause
+    exit /b 1
+)
+
+echo PostgreSQL 已找到，正在建立資料庫...
+
+REM 建立資料庫的 SQL 腳本
+echo CREATE DATABASE IF NOT EXISTS springboot_template; > temp_setup.sql
+echo CREATE DATABASE IF NOT EXISTS springboot_template_dev; >> temp_setup.sql
+echo CREATE DATABASE IF NOT EXISTS springboot_template_prod; >> temp_setup.sql
+echo CREATE USER IF NOT EXISTS springboot_user WITH ENCRYPTED PASSWORD 'springboot_password'; >> temp_setup.sql
+echo GRANT ALL PRIVILEGES ON DATABASE springboot_template TO springboot_user; >> temp_setup.sql
+echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_dev TO springboot_user; >> temp_setup.sql
+echo GRANT ALL PRIVILEGES ON DATABASE springboot_template_prod TO springboot_user; >> temp_setup.sql
+
+REM 執行 SQL 腳本
+echo 請輸入 PostgreSQL postgres 使用者的密碼（預設通常是 postgres）:
+psql -U postgres -h localhost -f temp_setup.sql
+
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo 資料庫設定完成！
+    echo 已建立以下資料庫：
+    echo - springboot_template
+    echo - springboot_template_dev  
+    echo - springboot_template_prod
+    echo.
+    echo 已建立使用者：springboot_user
+    echo 密碼：springboot_password
+) else (
+    echo.
+    echo 資料庫設定過程中發生錯誤。
+    echo 請檢查 PostgreSQL 是否正在執行，以及使用者密碼是否正確。
+)
+
+REM 清理暫存檔案
+del temp_setup.sql
+
+echo.
+echo 按任意鍵繼續...
+pause >nul

@@ -1,0 +1,40 @@
+# PostgreSQL 連接配置
+# 複製此檔案為 application-local.yml 並根據您的本地環境進行修改
+# 或者設定環境變數來覆蓋預設值
+
+spring:
+  # 本地 PostgreSQL 資料庫設定
+  datasource:
+    # 支援環境變數覆蓋，預設值在冒號後面
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:springboot_template}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}  # 請修改為您的資料庫使用者名稱或設定 DB_USERNAME 環境變數
+    password: ${DB_PASSWORD:postgres}   # 請修改為您的資料庫密碼或設定 DB_PASSWORD 環境變數
+    
+    # 連接池設定
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000
+      leak-detection-threshold: 60000
+  
+  # JPA 設定
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update  # 開發時使用 update，生產環境建議使用 validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# 日誌設定
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.nicenpc: DEBUG
+    root: INFO

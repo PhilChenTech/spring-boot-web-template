@@ -1,6 +1,85 @@
 # Nice NPC Spring Boot DDD Template
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](4. 監控 daemon 狀態：`.\gradlew.bat --status`
+
+## 資料庫配置
+
+### PostgreSQL 設定（預設）
+此專案已配置為使用 PostgreSQL 作為主要資料庫。
+
+#### 1. 安裝 PostgreSQL
+- **Windows**: 從 [PostgreSQL 官網](https://www.postgresql.org/download/windows/) 下載安裝程式
+- **macOS**: `brew install postgresql`
+- **Linux**: `sudo apt install postgresql postgresql-contrib`
+
+#### 2. 快速設定資料庫
+```bash
+# 執行自動化設定腳本
+.\setup-postgresql.bat
+
+# 或手動執行 SQL 腳本
+psql -U postgres -f database\init-postgresql.sql
+```
+
+#### 3. 測試連接
+```bash
+# 測試資料庫連接
+.\test-postgresql-connection.bat
+```
+
+#### 4. 環境配置
+專案支援多種環境配置：
+
+- **開發環境** (`dev`): `springboot_template_dev`
+- **測試環境** (`test`): 使用記憶體中的 H2 資料庫
+- **生產環境** (`prod`): `springboot_template_prod`
+- **預設環境**: `springboot_template`
+
+#### 5. 自訂本地配置
+複製範例配置檔案並修改：
+```bash
+copy infrastructure\src\main\resources\application-local.yml.example infrastructure\src\main\resources\application-local.yml
+```
+
+然後編輯 `application-local.yml` 設定您的資料庫連接資訊。
+
+#### 6. 環境變數配置（推薦）
+為了提高安全性，專案支援使用環境變數來配置資料庫連接：
+
+**方法一：使用設定腳本**
+```bash
+# Windows 批次檔
+.\set-db-env.bat dev
+
+# PowerShell 腳本
+.\Set-DbEnv.ps1 dev
+```
+
+**方法二：手動設定環境變數**
+```powershell
+# PowerShell
+$env:DB_HOST = "localhost"
+$env:DB_PORT = "5432"
+$env:DB_USERNAME = "myuser"
+$env:DB_PASSWORD = "mypassword"
+$env:DB_NAME = "springboot_template_dev"
+```
+
+**方法三：使用 .env 檔案**
+```bash
+# 複製範例檔案
+copy .env.example .env
+# 編輯 .env 檔案設定您的資料庫資訊
+```
+
+詳細的環境變數配置說明請參考：[ENVIRONMENT_VARIABLES_GUIDE.md](ENVIRONMENT_VARIABLES_GUIDE.md)
+
+### H2 資料庫（測試環境）
+測試環境自動使用 H2 記憶體資料庫，無需額外設定。
+
+詳細的資料庫設定說明請參考：[POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)
+
+## 快速開始ps://choosealicense.com/licenses/mit/)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
@@ -116,25 +195,49 @@ git clone https://github.com/PhilChenTech/spring-boot-web-template.git
 cd spring-boot-web-template
 ```
 
-### 2. 建置專案
+### 2. 設定資料庫
+```bash
+# 自動設定 PostgreSQL 資料庫
+.\setup-postgresql.bat
+
+# 或手動建立資料庫（如果偏好手動設定）
+psql -U postgres -f database\init-postgresql.sql
+```
+
+### 3. 建置專案
 ```bash
 # 建議使用 --no-daemon 避免卡住
 .\gradlew.bat --no-daemon clean build -x test
 ```
 
-### 3. 啟動應用程式
+### 4. 啟動應用程式
 ```bash
-# 方法一：使用批次檔
+# 方法一：使用新的 PostgreSQL 啟動腳本
+.\start-postgresql-app.bat web dev
+
+# 方法二：使用原始批次檔（現在也支援 PostgreSQL）
 start-app.bat
 
-# 方法二：直接執行 JAR
-java -jar adapter-inbound\build\libs\adapter-inbound-1.0.0.jar
+# 方法三：直接執行 JAR
+java -jar bootstrap\build\libs\nice-npc-springboot-template-1.0.0.jar --spring.profiles.active=dev
 ```
 
-### 4. 測試 API
+### 5. 測試 API
 - 健康檢查：http://localhost:8080/api/health
 - 歡迎頁面：http://localhost:8080/api/
 - 用戶 API：http://localhost:8080/api/users
+
+### 6. 不同環境啟動
+```bash
+# 開發環境（PostgreSQL）
+.\start-postgresql-app.bat web dev
+
+# 測試環境（H2 記憶體資料庫）
+.\start-postgresql-app.bat web test
+
+# 生產環境（PostgreSQL）
+.\start-postgresql-app.bat web prod
+```
 
 現在 API 回應將包含 Nice NPC 的品牌信息！
 
