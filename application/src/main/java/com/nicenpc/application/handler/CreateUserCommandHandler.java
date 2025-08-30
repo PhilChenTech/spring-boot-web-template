@@ -3,6 +3,7 @@ package com.nicenpc.application.handler;
 import com.nicenpc.application.command.CreateUserCommand;
 import com.nicenpc.application.metrics.ApplicationMetrics;
 import com.nicenpc.domain.User;
+import com.nicenpc.domain.exception.UserAlreadyExistsException;
 import com.nicenpc.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -36,7 +37,7 @@ public class CreateUserCommandHandler implements CommandHandler<CreateUserComman
             
             // 檢查email是否已存在
             if (userRepository.existsByEmail(command.getEmail())) {
-                throw new IllegalArgumentException("電子郵件已存在: " + command.getEmail());
+                throw new UserAlreadyExistsException(command.getEmail());
             }
             
             userRepository.save(user);

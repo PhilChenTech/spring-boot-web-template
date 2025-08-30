@@ -3,6 +3,7 @@ package com.nicenpc.application.handler;
 import com.nicenpc.application.query.GetUserByIdQuery;
 import com.nicenpc.application.metrics.ApplicationMetrics;
 import com.nicenpc.domain.User;
+import com.nicenpc.domain.exception.UserNotFoundException;
 import com.nicenpc.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,6 +25,7 @@ public class GetUserByIdQueryHandler implements QueryHandler<GetUserByIdQuery, U
     @Transactional(readOnly = true)
     public User handle(GetUserByIdQuery query) {
         applicationMetrics.incrementUserQuery();
-        return userRepository.findById(query.getUserId()).orElse(null);
+        return userRepository.findById(query.getUserId())
+                .orElseThrow(() -> new UserNotFoundException(query.getUserId()));
     }
 }

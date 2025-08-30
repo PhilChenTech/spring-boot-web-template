@@ -3,6 +3,7 @@ package com.nicenpc.adapterinbound.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nicenpc.application.UserService;
 import com.nicenpc.domain.User;
+import com.nicenpc.domain.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,6 +17,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -86,7 +88,7 @@ class UserControllerTest {
     @Test
     void testGetUserByIdNotExists() throws Exception {
         // Given
-        when(userService.getUserById(999L)).thenReturn(null);
+        when(userService.getUserById(999L)).thenThrow(new UserNotFoundException(999L));
 
         // When & Then
         mockMvc.perform(get("/api/users/999"))
