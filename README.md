@@ -4,7 +4,7 @@
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
-[![Company](https://img.shields.io/badge/Company-Nice%20NPC-blue.svg)](https://nice-npc.com)
+[![Repository](https://img.shields.io/badge/GitHub-PhilChenTech%2Fspring--boot--web--template-blue.svg)](https://github.com/PhilChenTech/spring-boot-web-template)
 
 一個基於 **Clean Architecture** 和 **Domain-Driven Design (DDD)** 原則的 Spring Boot Web 應用程式模板專案。
 
@@ -34,11 +34,11 @@ springboot-web-template/
 │   ├── handler/           # 指令/查詢處理器
 │   └── bus/               # 指令/查詢匯流排
 ├── infrastructure/        # 基礎設施層 - 外部依賴實現
-├── adapter-inbound/       # 入站適配器 - 控制器和 API
-├── adapter-outbound/      # 出站適配器 - 資料庫存取
+├── adapter-inbound/       # 入站適配器 - REST 控制器和 API
+├── adapter-outbound/      # 出站適配器 - 資料庫存取層
 ├── adapter-web/           # Web 適配器 - Web 特定配置
-├── adapter-desktop/       # Desktop 適配器 - JavaFX 應用
-└── common/                # 公共模組 - 共用工具
+├── common/                # 公共模組 - 共用工具和基礎類別
+└── database/              # 資料庫遷移腳本和初始化文件
 ```
 
 ## 🛠️ 技術棧
@@ -83,11 +83,24 @@ springboot-web-template/
    ```
 
 3. **設定環境變數**
+   
+   複製範例環境檔案：
+   ```bash
+   cp .env.example .env
+   ```
+   
+   或者手動設定環境變數：
    ```bash
    export DB_HOST=localhost
    export DB_PORT=5432
    export DB_USERNAME=postgres
    export DB_PASSWORD=test
+   export DB_NAME=springboot_template_dev
+   ```
+   
+   在 Windows 中可以使用提供的 PowerShell 腳本：
+   ```powershell
+   .\Set-DbEnv-Simple.ps1
    ```
 
 ### 執行應用程式
@@ -98,14 +111,10 @@ springboot-web-template/
 ```
 或指定 profile：
 ```bash
-./gradlew bootRun -Dspring.profiles.active=web
+./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
 
-#### Desktop 模式
-```bash
-./gradlew bootRun -Dspring.profiles.active=desktop
-```
-
+應用程式將在 http://localhost:8080 啟動
 
 ### 建構和測試
 
@@ -126,6 +135,25 @@ springboot-web-template/
 
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/api-docs
+
+### 主要 API 端點
+
+#### 使用者管理 API
+- `GET /api/v1/users` - 取得所有使用者
+- `GET /api/v1/users/{id}` - 根據 ID 取得使用者
+- `POST /api/v1/users` - 建立新使用者
+- `PUT /api/v1/users/{id}` - 更新使用者資訊
+- `DELETE /api/v1/users/{id}` - 刪除使用者
+
+#### 示範 API (UserDemo)
+- `GET /api/v1/users/demo/stats` - 取得使用者統計資訊
+- `GET /api/v1/users/demo/search-by-domain` - 根據郵件網域搜尋使用者
+- `POST /api/v1/users/demo/create-test-users` - 建立測試使用者
+- `DELETE /api/v1/users/demo/clear-all` - 清除所有使用者
+
+#### 健康檢查 API
+- `GET /health` - 應用程式健康狀態
+- `GET /` - 根路徑歡迎訊息
 
 ## 📊 監控和健康檢查
 
@@ -154,23 +182,29 @@ springboot-web-template/
 - `application-dev.yml` - 開發環境
 - `application-prod.yml` - 生產環境
 - `application-web.yml` - Web 模式特定配置
-- `application-desktop.yml` - Desktop 模式特定配置
 
 ### 重要配置項
 
 ```yaml
-# 資料庫配置
+# 應用程式配置
+app:
+  name: nice-npc-ddd-template
+  database:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    name: ${DB_NAME:springboot_template}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:test}
+  cache:
+    type: ${CACHE_TYPE:caffeine}
+    spec: ${CACHE_SPEC:maximumSize=1000,expireAfterAccess=600s,expireAfterWrite=300s}
+
+# Spring Boot 配置
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-# 快取配置
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=1000,expireAfterAccess=600s
+    url: jdbc:postgresql://${app.database.host}:${app.database.port}/${app.database.name}
+    username: ${app.database.username}
+    password: ${app.database.password}
 
 # 監控配置
 management:
@@ -244,9 +278,9 @@ open build/reports/jacoco/test/html/index.html
 
 如有問題或建議，請：
 
-1. 開啟 [GitHub Issue](https://github.com/yourusername/spring-boot-ddd-template/issues)
-2. 查看 [Wiki 文檔](https://github.com/yourusername/spring-boot-ddd-template/wiki)
-3. 發送郵件至：contact@nicenpc.com
+1. 開啟 [GitHub Issue](https://github.com/PhilChenTech/spring-boot-web-template/issues)
+2. 查看專案文檔
+3. 聯繫開發團隊
 
 ---
 
