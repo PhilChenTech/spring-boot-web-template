@@ -6,14 +6,14 @@
 [![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
 [![Company](https://img.shields.io/badge/Company-Nice%20NPC-blue.svg)](https://nice-npc.com)
 
-一個基於 **Clean Architecture** 和 **Domain-Driven Design (DDD)** 原則的 Spring Boot 模板專案，支援多種執行模式（Web、Desktop、Batch）。
+一個基於 **Clean Architecture** 和 **Domain-Driven Design (DDD)** 原則的 Spring Boot Web 應用程式模板專案。
 
 ## 🚀 特色功能
 
 - ✅ **Clean Architecture** - 清晰的層次結構和依賴方向
 - ✅ **Domain-Driven Design** - 領域驅動設計最佳實踐
 - ✅ **CQRS 模式** - 指令與查詢責任分離
-- ✅ **多模式支援** - Web、Desktop（JavaFX）、Batch 應用
+- ✅ **Web 應用程式** - 完整的 Web API 支援
 - ✅ **PostgreSQL 整合** - 生產級資料庫支援
 - ✅ **Spring Security** - 基本認證和 CORS 配置
 - ✅ **API 文檔** - OpenAPI 3.0 (Swagger)
@@ -38,7 +38,6 @@ springboot-web-template/
 ├── adapter-outbound/      # 出站適配器 - 資料庫存取
 ├── adapter-web/           # Web 適配器 - Web 特定配置
 ├── adapter-desktop/       # Desktop 適配器 - JavaFX 應用
-├── adapter-batch/         # Batch 適配器 - 批次處理
 └── common/                # 公共模組 - 共用工具
 ```
 
@@ -107,10 +106,6 @@ springboot-web-template/
 ./gradlew bootRun -Dspring.profiles.active=desktop
 ```
 
-#### Batch 模式
-```bash
-./gradlew bootRun -Dspring.profiles.active=batch
-```
 
 ### 建構和測試
 

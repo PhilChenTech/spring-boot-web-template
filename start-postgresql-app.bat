@@ -53,25 +53,9 @@ if not "%PROFILE%"=="test" (
     echo.
 )
 
-REM 根據應用程式類型和環境啟動
-if "%APP_TYPE%"=="web" (
-    echo 正在啟動 Web 應用程式（%PROFILE% 環境）...
-    .\gradlew :bootstrap:bootRun -Dapp.type=web --args="--spring.profiles.active=%PROFILE%"
-) else if "%APP_TYPE%"=="batch" (
-    echo 正在啟動批次應用程式（%PROFILE% 環境）...
-    .\gradlew :bootstrap:bootRun -Dapp.type=batch --args="--spring.profiles.active=%PROFILE%"
-) else (
-    echo 未知的應用程式類型: %APP_TYPE%
-    echo.
-    echo 使用方式: start-postgresql-app.bat [APP_TYPE] [PROFILE]
-    echo APP_TYPE: web^|batch （預設: web）
-    echo PROFILE: dev^|test^|prod^|local （預設: dev）
-    echo.
-    echo 範例:
-    echo   start-postgresql-app.bat web dev
-    echo   start-postgresql-app.bat batch test
-    exit /b 1
-)
+REM 啟動 Web 應用程式
+echo 正在啟動 Web 應用程式（%PROFILE% 環境）...
+.\gradlew :bootstrap:bootRun -Dapp.type=web --args="--spring.profiles.active=%PROFILE%"
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

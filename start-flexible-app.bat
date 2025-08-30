@@ -6,15 +6,6 @@ if "%APP_TYPE%"=="" set APP_TYPE=web
 
 echo Starting application in %APP_TYPE% mode...
 
-REM 根據應用程式類型設定不同的依賴
-if "%APP_TYPE%"=="web" (
-    echo Starting Web Application...
-    gradlew :bootstrap:bootRun --args="--spring.profiles.active=web --app.type=web"
-) else if "%APP_TYPE%"=="batch" (
-    echo Starting Batch Application...
-    gradlew :bootstrap:bootRun --args="--spring.profiles.active=batch --app.type=batch"
-) else (
-    echo Unknown application type: %APP_TYPE%
-    echo Usage: start-app.bat [web^|batch]
-    exit /b 1
-)
+REM 啟動 Web 應用程式
+echo Starting Web Application...
+gradlew :bootstrap:bootRun --args="--spring.profiles.active=web --app.type=web"
