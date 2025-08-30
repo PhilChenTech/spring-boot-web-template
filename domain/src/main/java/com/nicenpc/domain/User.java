@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.nicenpc.domain;
 
 public class User {
     private Long id;

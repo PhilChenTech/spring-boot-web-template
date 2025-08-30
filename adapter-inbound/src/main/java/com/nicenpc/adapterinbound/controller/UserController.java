@@ -1,7 +1,7 @@
-package com.example.adapterinbound.controller;
+package com.nicenpc.adapterinbound.controller;
 
-import com.example.application.UserService;
-import com.example.domain.User;
+import com.nicenpc.application.UserService;
+import com.nicenpc.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

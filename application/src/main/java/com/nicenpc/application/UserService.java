@@ -1,6 +1,6 @@
-package com.example.application;
+package com.nicenpc.application;
 
-import com.example.domain.User;
+import com.nicenpc.domain.User;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

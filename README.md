@@ -1,11 +1,12 @@
-# Spring Boot DDD 多模組專案
+# Nice NPC Spring Boot DDD Template
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
+[![Company](https://img.shields.io/badge/Company-Nice%20NPC-blue.svg)](https://nice-npc.com)
 
-一個基於 Domain-Driven Design (DDD) 架構的 Spring Boot 多模組專案模板，適合用作微服務或複雜業務系統的起始專案。
+一個基於 Domain-Driven Design (DDD) 架構的 Spring Boot 多模組專案模板，由 **Nice NPC** 開發並維護，適合用作微服務或複雜業務系統的起始專案。
 
 ## 專案配置
 - **Java 版本**: 21 (LTS)
@@ -13,6 +14,7 @@
 - **Gradle**: 8.x
 - **架構**: DDD (Domain-Driven Design) 多模組
 - **許可證**: MIT License
+- **公司**: Nice NPC (nice-npc.com)
 
 ## 專案修正總結
 
@@ -134,6 +136,8 @@ java -jar adapter-inbound\build\libs\adapter-inbound-1.0.0.jar
 - 歡迎頁面：http://localhost:8080/api/
 - 用戶 API：http://localhost:8080/api/users
 
+現在 API 回應將包含 Nice NPC 的品牌信息！
+
 ## 貢獻指南
 
 我們歡迎任何形式的貢獻！請參考以下步驟：
@@ -153,7 +157,12 @@ java -jar adapter-inbound\build\libs\adapter-inbound-1.0.0.jar
 如果您有任何問題或建議，歡迎：
 - 開啟 [Issue](https://github.com/PhilChenTech/spring-boot-web-template/issues)
 - 聯絡專案維護者：[@PhilChenTech](https://github.com/PhilChenTech)
+- 造訪公司官網：[nice-npc.com](https://nice-npc.com)
 
 ## 致謝
 
 感謝所有為此專案做出貢獻的開發者！
+
+---
+
+**Powered by [Nice NPC](https://nice-npc.com) - Making Technology Nice & Professional & Creative**
