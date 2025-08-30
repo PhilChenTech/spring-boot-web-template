@@ -2,7 +2,7 @@ package com.nicenpc.adapterinbound.controller;
 
 import com.nicenpc.application.UserService;
 import com.nicenpc.domain.User;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +11,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/h2-demo")
+@RequiredArgsConstructor
 public class H2DemoController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     /**
      * 獲取資料庫統計信息

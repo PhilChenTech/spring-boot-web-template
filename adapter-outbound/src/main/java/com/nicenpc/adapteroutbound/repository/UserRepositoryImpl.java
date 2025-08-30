@@ -3,7 +3,7 @@ package com.nicenpc.adapteroutbound.repository;
 import com.nicenpc.domain.User;
 import com.nicenpc.domain.repository.UserRepository;
 import com.nicenpc.adapteroutbound.mapper.UserMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,14 +15,10 @@ import java.util.stream.Collectors;
  * 實作 domain 層的 UserRepository 介面，負責在 domain 實體和 JPA 實體間轉換
  */
 @Component
+@RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
     
     private final UserJpaRepository userJpaRepository;
-    
-    @Autowired
-    public UserRepositoryImpl(UserJpaRepository userJpaRepository) {
-        this.userJpaRepository = userJpaRepository;
-    }
     
     @Override
     public User save(User user) {
