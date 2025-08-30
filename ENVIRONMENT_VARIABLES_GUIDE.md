@@ -116,7 +116,7 @@ export DB_NAME=springboot_template_dev
 #### 生產環境
 ```bash
 # 在系統層級設定環境變數（推薦）
-# 或使用配置管理工具（如 Docker secrets, Kubernetes secrets）
+# 或使用配置管理工具（如 Kubernetes secrets）
 
 # 啟動應用程式
 .\start-postgresql-app.bat web prod

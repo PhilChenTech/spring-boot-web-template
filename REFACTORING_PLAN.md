@@ -210,7 +210,7 @@
 - ✅ TASK-015: 添加健康檢查 (配置Spring Boot Actuator端點，包含健康、資訊和指標)
 - ✅ TASK-016: 實施CQRS模式 (實現指令與查詢責任分離，使用CommandBus和QueryBus)
 - ✅ TASK-017: 添加監控和指標 (集成Micrometer和Prometheus，創建自定義應用指標)
-- ✅ TASK-018: 實施CI/CD流程 (創建GitHub Actions工作流程，包含Docker化和自動化部署)
+- ✅ TASK-018: 實施CI/CD流程 (創建GitHub Actions工作流程和自動化部署)
 - ✅ TASK-019: 性能優化 (添加Caffeine快取支援，優化HikariCP連接池配置)
 - ✅ TASK-020: 文檔完善 (完成README.md，包含完整的使用指南和架構說明)
 

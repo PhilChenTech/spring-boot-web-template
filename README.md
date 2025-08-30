@@ -20,8 +20,6 @@
 - ✅ **監控指標** - Micrometer + Prometheus
 - ✅ **健康檢查** - Spring Boot Actuator
 - ✅ **快取支援** - Caffeine 高性能快取
-- ✅ **CI/CD 流程** - GitHub Actions
-- ✅ **Docker 支援** - 容器化部署
 - ✅ **測試覆蓋率** - JaCoCo 報告
 
 ## 🏗️ 專案架構
@@ -57,7 +55,6 @@ springboot-web-template/
 - **SpringDoc OpenAPI** - API 文檔
 - **JUnit 5** - 單元測試
 - **JaCoCo** - 測試覆蓋率
-- **Docker** - 容器化
 
 ## 🚀 快速開始
 
@@ -65,7 +62,6 @@ springboot-web-template/
 
 - Java 21+
 - PostgreSQL 15+
-- Docker (可選)
 
 ### 環境設定
 
@@ -127,9 +123,6 @@ springboot-web-template/
 
 # 建構應用程式
 ./gradlew build
-
-# 建構 Docker 映像
-docker build -t spring-boot-ddd-template .
 ```
 
 ## 📋 API 文檔
@@ -155,55 +148,6 @@ docker build -t spring-boot-ddd-template .
 - `user.creation.time` - 使用者建立耗時
 - `user.active.count` - 目前活躍使用者數
 
-## 🐳 Docker 部署
-
-### 建構映像
-```bash
-docker build -t spring-boot-ddd-template .
-```
-
-### 執行容器
-```bash
-docker run -d \
-  -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  -e DB_HOST=host.docker.internal \
-  -e DB_USERNAME=postgres \
-  -e DB_PASSWORD=yourpassword \
-  --name spring-app \
-  spring-boot-ddd-template
-```
-
-### Docker Compose (建議)
-```yaml
-version: '3.8'
-services:
-  app:
-    image: spring-boot-ddd-template
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DB_HOST: postgres
-      DB_USERNAME: postgres
-      DB_PASSWORD: password
-    depends_on:
-      - postgres
-  
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: springboot_template_db_prod
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
 
 ## 🔧 配置說明
 
@@ -266,23 +210,6 @@ management:
 open build/reports/jacoco/test/html/index.html
 ```
 
-## 🚀 CI/CD 流程
-
-專案包含完整的 GitHub Actions 工作流程：
-
-### CI 流程 (`.github/workflows/ci.yml`)
-- 程式碼檢出
-- Java 21 環境設置
-- PostgreSQL 服務啟動
-- 依賴快取
-- 測試執行
-- 覆蓋率報告
-- 安全掃描
-
-### CD 流程 (`.github/workflows/cd.yml`)
-- Docker 映像建構
-- 容器註冊表推送
-- 自動發布
 
 ## 📚 開發指南
 
