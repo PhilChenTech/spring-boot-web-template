@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @ConditionalOnClass(Entity.class)
-@EnableJpaRepositories(basePackages = "com.nicenpc.adapteroutbound.repository")
-@EntityScan(basePackages = "com.nicenpc.adapteroutbound.entity")
+@EnableJpaRepositories(basePackages = "com.nicenpc.adapter.outbound.repository")
+@EntityScan(basePackages = "com.nicenpc.adapter.outbound.entity")
 public class JpaConfig {
 }
