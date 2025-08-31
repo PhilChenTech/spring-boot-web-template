@@ -660,7 +660,7 @@ class UserTest {
     private Exception thrownException;
     
     @Test
-    @DisplayName("應該成功創建有效的使用者")
+    @DisplayName("given: 有效的使用者姓名和信箱 when: 創建使用者 then: 應該成功創建並返回正確資料")
     void shouldCreateValidUser() {
         givenValidUserNameAndEmail();
         whenCreatingUser();
@@ -683,7 +683,7 @@ class UserTest {
     }
     
     @Test
-    @DisplayName("當姓名為空時應該拋出 UserValidationException")
+    @DisplayName("given: 空的使用者姓名 when: 創建使用者 then: 應該拋出 UserValidationException")
     void shouldThrowExceptionWhenNameIsEmpty() {
         givenEmptyUserName();
         whenCreatingUser();
@@ -742,7 +742,7 @@ class UserControllerTest {
     private ResponseEntity<ApiResponse> response;
     
     @Test
-    @DisplayName("應該成功創建使用者並返回 201 狀態碼")
+    @DisplayName("given: 有效的創建使用者請求 when: 創建使用者 then: 應該返回 201 狀態碼和成功回應")
     void shouldCreateUserSuccessfully() {
         givenValidCreateUserRequest();
         whenCreatingUser();
@@ -785,7 +785,7 @@ class UserServiceTest {
     private User result;
     
     @Test
-    @DisplayName("應該成功創建使用者")
+    @DisplayName("given: 有效的創建使用者指令 when: 創建使用者 then: 應該成功創建並保存到資料庫")
     void shouldCreateUserSuccessfully() {
         givenCreateUserCommand();
         whenCreatingUser();
