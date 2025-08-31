@@ -612,10 +612,17 @@ UserRepositoryTest.java          # 倉庫單元測試
 - `when...()` - 執行被測試的操作
 - `then...()` - 驗證結果和斷言
 
+#### @DisplayName 格式規範
+測試描述必須使用 "given: ... when: ... then: ..." 的格式：
+
+```java
+@DisplayName("given: 有效的使用者資料 when: 創建使用者 then: 應該成功創建並返回正確資料")
+```
+
 #### 標準測試結構模板
 ```java
 @Test
-@DisplayName("測試描述")
+@DisplayName("given: 測試前置條件 when: 執行的操作 then: 預期的結果")
 void shouldDoSomethingWhenCondition() {
     // 測試方法主體只能調用這三個方法
     givenValidUserData();
