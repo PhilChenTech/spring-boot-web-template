@@ -240,23 +240,61 @@ open build/reports/jacoco/test/html/index.html
 ```
 
 
-## 📚 開發指南
+## 🔧 開發指南
 
-### 新增功能
+### Lombok 整合
 
-1. **領域實體** - 在 `domain` 模組中定義
-2. **應用服務** - 在 `application` 模組中實現 CQRS 模式
-3. **資料庫存取** - 在 `infrastructure` 模組中實現 Repository
-4. **API 端點** - 在 `adapter-inbound` 模組中實現 Controller
+本項目已集成 Lombok 來減少樣板代碼：
 
-### 最佳實踐
+#### 主要使用的註解：
+- `@Data` - 自動生成 getter、setter、equals、hashCode、toString
+- `@NoArgsConstructor` / `@AllArgsConstructor` - 構造函數
+- `@RequiredArgsConstructor` - 用於依賴注入
+- `@Builder` - 建造者模式
 
-- 遵循 Clean Architecture 依賴規則
-- 使用 CQRS 分離讀寫操作
-- 在 Domain 層實現業務驗證
-- 使用 MapStruct 進行物件轉換
-- 添加適當的快取策略
-- 編寫充足的單元測試
+#### 各層級應用：
+- **Domain Layer**: 使用 `@Data` 簡化實體類
+- **Application Layer**: 使用 `@RequiredArgsConstructor` 進行依賴注入
+- **Adapter Layer**: 使用 `@Builder` 簡化 DTO 建構
+
+### MapStruct 整合
+
+自動化物件映射配置：
+
+```java
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    UserResponse toResponse(User user);
+    User toEntity(CreateUserRequest request);
+}
+```
+
+配置要點：
+- 使用 `componentModel = "spring"` 整合 Spring
+- 避免在 Domain 層直接使用
+- 主要用於 Adapter 層的資料轉換
+
+### 環境配置
+
+#### 資料庫環境變數
+```bash
+# PostgreSQL 配置
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=nice_npc_db
+export DB_USERNAME=nice_npc_user
+export DB_PASSWORD=your_password
+```
+
+#### Windows 環境設置
+使用提供的批次檔：
+```cmd
+set-db-env.bat
+```
+
+## 📚 相關文檔
+
+- [編碼規範](CODING_RULES.md) - 項目編碼標準
 
 ## 🤝 貢獻指南
 
