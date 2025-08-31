@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.config;
+package com.nicenpc.infrastructure.adapter.config;
 
 import jakarta.persistence.Entity;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @ConditionalOnClass(Entity.class)
-@EnableJpaRepositories(basePackages = "com.nicenpc.adapter.outbound.repository")
-@EntityScan(basePackages = "com.nicenpc.adapter.outbound.entity")
+@EnableJpaRepositories(basePackages = "com.nicenpc.infrastructure.adapter.outbound.repository")
+@EntityScan(basePackages = "com.nicenpc.infrastructure.adapter.outbound.entity")
 public class JpaConfig {
 }

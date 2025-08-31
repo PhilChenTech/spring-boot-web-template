@@ -1,11 +1,11 @@
-package com.nicenpc.adapter.inbound.controller;
+package com.nicenpc.infrastructure.adapter.inbound.controller;
 
 import com.nicenpc.application.UserService;
 import com.nicenpc.domain.User;
-import com.nicenpc.adapter.inbound.dto.ApiResponse;
-import com.nicenpc.adapter.inbound.dto.CreateUserRequest;
-import com.nicenpc.adapter.inbound.dto.UserResponse;
-import com.nicenpc.adapter.inbound.mapper.UserDTOMapper;
+import com.nicenpc.infrastructure.adapter.inbound.dto.ApiResponse;
+import com.nicenpc.infrastructure.adapter.inbound.dto.CreateUserRequest;
+import com.nicenpc.infrastructure.adapter.inbound.dto.UserResponse;
+import com.nicenpc.infrastructure.adapter.inbound.mapper.UserDTOMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

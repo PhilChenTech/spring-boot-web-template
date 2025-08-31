@@ -1,6 +1,6 @@
-package com.nicenpc.adapter.inbound.exception;
+package com.nicenpc.infrastructure.adapter.inbound.exception;
 
-import com.nicenpc.adapter.inbound.dto.ApiResponse;
+import com.nicenpc.infrastructure.adapter.inbound.dto.ApiResponse;
 import com.nicenpc.domain.exception.DomainException;
 import com.nicenpc.domain.exception.UserValidationException;
 import com.nicenpc.domain.exception.UserNotFoundException;

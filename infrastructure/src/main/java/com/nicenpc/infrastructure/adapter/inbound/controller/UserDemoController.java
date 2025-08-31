@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.inbound.controller;
+package com.nicenpc.infrastructure.adapter.inbound.controller;
 
 import com.nicenpc.application.UserService;
 import com.nicenpc.domain.User;

@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.outbound.entity;
+package com.nicenpc.infrastructure.adapter.outbound.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

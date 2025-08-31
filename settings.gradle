@@ -1,2 +1,2 @@
 rootProject.name = 'nice-npc-springboot-template'
-include 'domain','application','adapter','infrastructure','common'
+include 'domain','application','infrastructure','common'

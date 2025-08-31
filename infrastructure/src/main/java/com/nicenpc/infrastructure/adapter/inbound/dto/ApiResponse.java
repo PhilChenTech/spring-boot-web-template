@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.inbound.dto;
+package com.nicenpc.infrastructure.adapter.inbound.dto;
 
 import java.time.Instant;
 

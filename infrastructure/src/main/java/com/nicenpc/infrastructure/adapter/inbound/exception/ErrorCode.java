@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.inbound.exception;
+package com.nicenpc.infrastructure.adapter.inbound.exception;
 
 /**
  * 統一錯誤代碼定義

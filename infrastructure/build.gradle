@@ -9,14 +9,19 @@ dependencies {
     implementation project(":domain")
     implementation project(":common")
     
-    // 根據需要動態引入不同的適配器
-    runtimeOnly project(":adapter")
-    
     // 基礎 Spring Boot starter
     implementation 'org.springframework.boot:spring-boot-starter'
     
     // Web starter（需要用於 SERVLET 模式）
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // Web dependencies for inbound adapters
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Data JPA dependencies for outbound adapters
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // PostgreSQL 資料庫驅動
+    runtimeOnly 'org.postgresql:postgresql'
     
     // Security starter
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -35,15 +40,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     
-    // Validation
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    
-    // Database
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    
-    // Lombok (inherited from parent but need to be explicit for infrastructure)
+    // Lombok for adapter layer (inherited from parent but need to be explicit for infrastructure)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    
+    // MapStruct with Lombok integration
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     
     // 測試依賴
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

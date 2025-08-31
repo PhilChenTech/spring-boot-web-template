@@ -1,6 +1,6 @@
-package com.nicenpc.adapter.outbound.repository;
+package com.nicenpc.infrastructure.adapter.outbound.repository;
 
-import com.nicenpc.adapter.outbound.entity.UserEntity;
+import com.nicenpc.infrastructure.adapter.outbound.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

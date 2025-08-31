@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.inbound.dto;
+package com.nicenpc.infrastructure.adapter.inbound.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;

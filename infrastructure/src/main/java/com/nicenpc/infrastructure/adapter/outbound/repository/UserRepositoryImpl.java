@@ -1,8 +1,8 @@
-package com.nicenpc.adapter.outbound.repository;
+package com.nicenpc.infrastructure.adapter.outbound.repository;
 
 import com.nicenpc.domain.User;
 import com.nicenpc.domain.repository.UserRepository;
-import com.nicenpc.adapter.outbound.mapper.UserMapper;
+import com.nicenpc.infrastructure.adapter.outbound.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

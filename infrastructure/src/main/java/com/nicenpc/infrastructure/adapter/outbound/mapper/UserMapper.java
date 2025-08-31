@@ -1,7 +1,7 @@
-package com.nicenpc.adapter.outbound.mapper;
+package com.nicenpc.infrastructure.adapter.outbound.mapper;
 
 import com.nicenpc.domain.User;
-import com.nicenpc.adapter.outbound.entity.UserEntity;
+import com.nicenpc.infrastructure.adapter.outbound.entity.UserEntity;
 import com.nicenpc.common.mapper.MapStructConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

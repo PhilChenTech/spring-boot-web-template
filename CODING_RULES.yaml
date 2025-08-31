@@ -43,7 +43,8 @@ coding_rules:
       infrastructure:
         description: "Infrastructure layer"
         packages:
-          - "config"     # Configuration classes
+          - "config"     # Spring configurations
+          - "metrics"    # Monitoring metrics
       adapter:
         description: "Adapter layer"
         inbound:
@@ -55,11 +56,6 @@ coding_rules:
           - "entity"     # JPA entities
           - "repository" # Repository implementations
           - "mapper"     # Entity mappers
-      infrastructure:
-        description: "Infrastructure layer"
-        packages:
-          - "config"     # Spring configurations
-          - "metrics"    # Monitoring metrics
       common:
         description: "Common modules"
         packages:

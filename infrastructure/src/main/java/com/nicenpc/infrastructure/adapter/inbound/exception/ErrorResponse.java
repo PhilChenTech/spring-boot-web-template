@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.inbound.exception;
+package com.nicenpc.infrastructure.adapter.inbound.exception;
 
 import java.time.Instant;
 import java.util.Map;

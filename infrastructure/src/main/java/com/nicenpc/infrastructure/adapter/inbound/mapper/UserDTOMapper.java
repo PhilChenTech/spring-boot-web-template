@@ -1,8 +1,8 @@
-package com.nicenpc.adapter.inbound.mapper;
+package com.nicenpc.infrastructure.adapter.inbound.mapper;
 
 import com.nicenpc.domain.User;
-import com.nicenpc.adapter.inbound.dto.CreateUserRequest;
-import com.nicenpc.adapter.inbound.dto.UserResponse;
+import com.nicenpc.infrastructure.adapter.inbound.dto.CreateUserRequest;
+import com.nicenpc.infrastructure.adapter.inbound.dto.UserResponse;
 import com.nicenpc.common.mapper.MapStructConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

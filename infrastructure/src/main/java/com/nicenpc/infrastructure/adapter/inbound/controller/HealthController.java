@@ -1,4 +1,4 @@
-package com.nicenpc.adapter.inbound.controller;
+package com.nicenpc.infrastructure.adapter.inbound.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
