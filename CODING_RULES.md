@@ -643,17 +643,15 @@ public class JpaConfig { }
 // Adapter-Inbound
 @RestController
 @RequestMapping("/api/v1/users")
-public class UserController { }
+public class UserController {
 
-@ControllerAdvice
-public class GlobalExceptionHandler { }
-
-// Adapter-Outbound
-@Repository
-public interface UserJpaRepository extends JpaRepository<UserEntity, Long> { }
-
-@Component
-public class UserRepositoryImpl implements UserRepository { }
+    @GetMapping                          // GET /api/v1/users
+    @GetMapping("/{id}")                // GET /api/v1/users/123
+    @PostMapping                        // POST /api/v1/users
+    @PutMapping("/{id}")                // PUT /api/v1/users/123
+    @DeleteMapping("/{id}")             // DELETE /api/v1/users/123
+    @GetMapping("/search")              // GET /api/v1/users/search?email=...
+}
 ```
 
 ### 3. 配置註解規範
@@ -893,15 +891,26 @@ public class GlobalExceptionHandler {
 
 ## 🧪 測試規範
 
-### 1. 測試分層結構
+### 1. 測試原則
+
+#### 純單元測試策略
+- **只使用單元測試**：不依賴 Spring 框架或外部資源
+- **快速執行**：所有測試應該在幾秒內完成
+- **隔離性**：每個測試完全獨立，使用 Mock 隔離依賴
+- **確定性**：測試結果應該可重現且穩定
+
+### 2. 測試分層結構
 
 ```java
-// ✅ 單元測試 - Domain Layer
+// ✅ Domain Layer 單元測試
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private UserService userService;
@@ -923,74 +932,249 @@ class UserServiceTest {
         assertThat(actualUser).isNotNull();
         assertThat(actualUser.getName()).isEqualTo(name);
         assertThat(actualUser.getEmail()).isEqualTo(email);
+        verify(userRepository).save(any(User.class));
     }
-}
-
-// ✅ 整合測試 - Repository Layer
-@DataJpaTest
-@TestPropertySource(properties = {
-    "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.datasource.url=jdbc:h2:mem:testdb"
-})
-class UserRepositoryTest {
-
-    @Autowired
-    private TestEntityManager entityManager;
-
-    @Autowired
-    private UserJpaRepository userRepository;
 
     @Test
-    @DisplayName("應該根據信箱查詢到使用者")
-    void shouldFindUserByEmail() {
+    @DisplayName("當信箱已存在時，應該拋出異常")
+    void shouldThrowExceptionWhenEmailExists() {
         // Given
-        UserEntity user = new UserEntity();
-        user.setName("John Doe");
-        user.setEmail("john@example.com");
-        entityManager.persistAndFlush(user);
+        String email = "existing@example.com";
+        when(userRepository.existsByEmail(email)).thenReturn(true);
 
-        // When
-        Optional<UserEntity> foundUser = userRepository.findByEmail("john@example.com");
-
-        // Then
-        assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getName()).isEqualTo("John Doe");
+        // When & Then
+        assertThrows(UserAlreadyExistsException.class, 
+            () -> userService.createUser("John", email));
     }
 }
 
-// ✅ API 測試 - Controller Layer
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
-class UserControllerIntegrationTest {
+// ✅ Application Layer 單元測試
+@ExtendWith(MockitoExtension.class)
+class CreateUserCommandHandlerTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
+    @Mock
+    private UserRepository userRepository;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Mock
+    private EmailService emailService;
+
+    @InjectMocks
+    private CreateUserCommandHandler handler;
+
+    @Test
+    @DisplayName("應該成功處理創建使用者指令")
+    void shouldHandleCreateUserCommand() {
+        // Given
+        CreateUserCommand command = new CreateUserCommand("John Doe", "john@example.com", "password123");
+        User savedUser = new User("John Doe", "john@example.com");
+        
+        when(userRepository.existsByEmail(command.email())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        // When
+        User result = handler.handle(command);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("John Doe");
+        verify(emailService).sendWelcomeEmail(any(User.class));
+        verify(userRepository).save(any(User.class));
+    }
+}
+
+// ✅ Controller Layer 單元測試
+@ExtendWith(MockitoExtension.class)
+class UserControllerTest {
+
+    @Mock
+    private UserService userService;
+
+    @InjectMocks
+    private UserController userController;
 
     @Test
     @DisplayName("應該成功創建使用者並回傳201狀態碼")
     void shouldCreateUserAndReturn201() {
         // Given
         CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com");
+        UserResponse userResponse = new UserResponse(1L, "John Doe", "john@example.com", Instant.now());
+        
+        when(userService.createUser(any(CreateUserRequest.class))).thenReturn(userResponse);
 
         // When
-        ResponseEntity<ApiResponse> response = restTemplate.postForEntity(
-            "/api/v1/users", request, ApiResponse.class);
+        ResponseEntity<ApiResponse<UserResponse>> response = userController.createUser(request);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().isSuccess()).isTrue();
+        assertThat(response.getBody().getData().getName()).isEqualTo("John Doe");
+        verify(userService).createUser(request);
+    }
+
+    @Test
+    @DisplayName("當使用者不存在時，應該回傳404狀態碼")
+    void shouldReturn404WhenUserNotFound() {
+        // Given
+        Long userId = 999L;
+        when(userService.getUserById(userId)).thenThrow(UserNotFoundException.withId(userId));
+
+        // When & Then
+        assertThrows(UserNotFoundException.class, 
+            () -> userController.getUserById(userId));
+    }
+}
+
+// ✅ Repository Implementation 單元測試
+@ExtendWith(MockitoExtension.class)
+class UserRepositoryImplTest {
+
+    @Mock
+    private UserJpaRepository jpaRepository;
+
+    @Mock
+    private UserEntityMapper entityMapper;
+
+    @InjectMocks
+    private UserRepositoryImpl userRepository;
+
+    @Test
+    @DisplayName("應該成功儲存使用者")
+    void shouldSaveUser() {
+        // Given
+        User user = new User("John Doe", "john@example.com");
+        UserEntity userEntity = new UserEntity();
+        userEntity.setName("John Doe");
+        userEntity.setEmail("john@example.com");
+        
+        when(entityMapper.toEntity(user)).thenReturn(userEntity);
+        when(jpaRepository.save(userEntity)).thenReturn(userEntity);
+        when(entityMapper.toDomain(userEntity)).thenReturn(user);
+
+        // When
+        User savedUser = userRepository.save(user);
+
+        // Then
+        assertThat(savedUser).isNotNull();
+        assertThat(savedUser.getName()).isEqualTo("John Doe");
+        verify(jpaRepository).save(userEntity);
     }
 }
 ```
 
-### 2. 測試命名規範
+### 3. 純領域物件測試
+
+```java
+// ✅ 不需要任何框架的純領域測試
+class UserTest {
+
+    @Test
+    @DisplayName("當信箱格式正確時，應該成功創建使用者")
+    void shouldCreateUserWithValidEmail() {
+        // Given
+        String name = "John Doe";
+        String email = "john@example.com";
+
+        // When & Then
+        assertDoesNotThrow(() -> new User(name, email));
+    }
+
+    @Test
+    @DisplayName("當信箱格式錯誤時，應該拋出異常")
+    void shouldThrowExceptionWithInvalidEmail() {
+        // Given
+        String name = "John Doe";
+        String invalidEmail = "invalid-email";
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, 
+            () -> new User(name, invalidEmail));
+    }
+
+    @Test
+    @DisplayName("應該正確驗證使用者狀態")
+    void shouldValidateUserStatus() {
+        // Given
+        User user = new User("John Doe", "john@example.com");
+        
+        // When
+        user.activate();
+        
+        // Then
+        assertThat(user.isActive()).isTrue();
+    }
+}
+
+// ✅ 值物件測試
+class MoneyTest {
+
+    @Test
+    @DisplayName("應該正確加總相同幣別的金額")
+    void shouldAddSameCurrencyAmounts() {
+        // Given
+        Money money1 = new Money(BigDecimal.valueOf(100), Currency.getInstance("USD"));
+        Money money2 = new Money(BigDecimal.valueOf(50), Currency.getInstance("USD"));
+
+        // When
+        Money result = money1.add(money2);
+
+        // Then
+        assertThat(result.amount()).isEqualTo(BigDecimal.valueOf(150));
+        assertThat(result.currency()).isEqualTo(Currency.getInstance("USD"));
+    }
+
+    @Test
+    @DisplayName("當幣別不同時，應該拋出異常")
+    void shouldThrowExceptionWhenDifferentCurrencies() {
+        // Given
+        Money usd = new Money(BigDecimal.valueOf(100), Currency.getInstance("USD"));
+        Money eur = new Money(BigDecimal.valueOf(50), Currency.getInstance("EUR"));
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> usd.add(eur));
+    }
+}
+```
+
+### 4. Record 測試
+
+```java
+// ✅ Record 物件測試
+class CreateUserCommandTest {
+
+    @Test
+    @DisplayName("應該正確創建 CreateUserCommand")
+    void shouldCreateCommand() {
+        // Given
+        String name = "John Doe";
+        String email = "john@example.com";
+        String password = "password123";
+
+        // When
+        CreateUserCommand command = new CreateUserCommand(name, email, password);
+
+        // Then
+        assertThat(command.name()).isEqualTo(name);
+        assertThat(command.email()).isEqualTo(email);
+        assertThat(command.password()).isEqualTo(password);
+    }
+
+    @Test
+    @DisplayName("Record 應該正確實現 equals 和 hashCode")
+    void shouldImplementEqualsAndHashCode() {
+        // Given
+        CreateUserCommand command1 = new CreateUserCommand("John", "john@example.com", "pass");
+        CreateUserCommand command2 = new CreateUserCommand("John", "john@example.com", "pass");
+        CreateUserCommand command3 = new CreateUserCommand("Jane", "jane@example.com", "pass");
+
+        // Then
+        assertThat(command1).isEqualTo(command2);
+        assertThat(command1).isNotEqualTo(command3);
+        assertThat(command1.hashCode()).isEqualTo(command2.hashCode());
+    }
+}
+```
+
+### 5. 測試命名規範
 
 ```java
 // ✅ 正確的測試方法命名
@@ -1017,361 +1201,203 @@ void createUser() { }  // 不描述預期結果
 void testCreateUserWithInvalidEmail() { }  // 缺少預期行為
 ```
 
-### 3. 測試覆蓋率要求
+### 6. 測試覆蓋率要求
 
-- **Domain Layer**: 90% 以上
-- **Application Layer**: 85% 以上
-- **Adapter Layer**: 80% 以上
-- **整體專案**: 85% 以上
+- **Domain Layer**: 95% 以上
+- **Application Layer**: 90% 以上
+- **Adapter Layer**: 85% 以上
+- **整體專案**: 90% 以上
 
-## 📚 文檔規範
+### 7. 測試最佳實踐
 
-### 1. API 文檔規範
-
+#### Given-When-Then 模式
 ```java
-// ✅ 完整的 API 文檔
-@RestController
-@RequestMapping("/api/v1/users")
-@Tag(name = "User Management", description = "使用者管理相關 API")
-public class UserController {
+@Test
+@DisplayName("應該正確計算使用者年齡")
+void shouldCalculateUserAge() {
+    // Given - 準備測試資料
+    LocalDate birthDate = LocalDate.of(1990, 1, 1);
+    User user = new User("John", "john@example.com", birthDate);
+    
+    // When - 執行測試動作
+    int age = user.calculateAge();
+    
+    // Then - 驗證結果
+    assertThat(age).isEqualTo(34); // 假設當前年份是2024
+}
+```
 
-    @Operation(
-        summary = "創建新使用者",
-        description = "根據提供的姓名和信箱創建一個新的使用者帳號"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "使用者創建成功",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = UserResponse.class)
-            )
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "請求參數驗證失敗",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)
-            )
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "信箱地址已被使用",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ApiResponse.class)
-            )
-        )
-    })
-    @PostMapping
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(
-        @Parameter(description = "使用者創建請求資料", required = true)
-        @Valid @RequestBody CreateUserRequest request
-    ) {
-        // 實作邏輯
+#### 測試資料建立
+```java
+// ✅ 使用測試資料建構器模式
+public class UserTestDataBuilder {
+    private String name = "Default Name";
+    private String email = "default@example.com";
+    private UserStatus status = UserStatus.ACTIVE;
+
+    public static UserTestDataBuilder aUser() {
+        return new UserTestDataBuilder();
+    }
+
+    public UserTestDataBuilder withName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public UserTestDataBuilder withEmail(String email) {
+        this.email = email;
+        return this;
+    }
+
+    public UserTestDataBuilder withStatus(UserStatus status) {
+        this.status = status;
+        return this;
+    }
+
+    public User build() {
+        return new User(name, email, status);
+    }
+}
+
+// 使用範例
+@Test
+void shouldCreateActiveUser() {
+    // Given
+    User user = UserTestDataBuilder.aUser()
+        .withName("John Doe")
+        .withEmail("john@example.com")
+        .withStatus(UserStatus.ACTIVE)
+        .build();
+
+    // When & Then
+    assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
+    assertThat(user.isActive()).isTrue();
+}
+```
+
+#### Mock 使用原則
+```java
+// ✅ 正確的 Mock 使用
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;  // Mock 外部依賴
+
+    @Mock
+    private EmailService emailService;     // Mock 外部服務
+
+    @InjectMocks
+    private UserService userService;       // 注入被測試的類別
+
+    @Test
+    void shouldSendWelcomeEmailWhenUserCreated() {
+        // Given
+        CreateUserCommand command = new CreateUserCommand("John", "john@example.com", "password");
+        User savedUser = new User("John", "john@example.com");
+        
+        when(userRepository.existsByEmail(command.email())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        // When
+        userService.createUser(command);
+
+        // Then
+        verify(emailService).sendWelcomeEmail(savedUser);
+        verify(userRepository).save(any(User.class));
     }
 }
 ```
 
-### 2. README 文檔規範
-
-每個模組都應包含詳細的 README.md 文件，包含：
-
-- 模組目的和職責
-- 依賴關係說明
-- 設定和使用方式
-- 範例程式碼
-- 故障排除指南
-
-### 3. 程式碼註釋規範
-
+#### 異常測試
 ```java
-/**
- * 使用者服務類
- * 
- * <p>負責處理使用者相關的業務邏輯，包括使用者的創建、查詢、更新和刪除操作。
- * 所有操作都會進行適當的權限檢查和資料驗證。</p>
- * 
- * <p>使用範例：</p>
- * <pre>{@code
- * UserService userService = new UserService(userRepository);
- * User user = userService.createUser("John Doe", "john@example.com");
- * }</pre>
- * 
- * @author Nice NPC Team
- * @version 1.0
- * @since 2024-01-01
- */
-@Service
-@RequiredArgsConstructor
-public class UserService {
+// ✅ 異常測試的正確寫法
+@Test
+@DisplayName("當使用者已存在時，應該拋出特定異常")
+void shouldThrowSpecificExceptionWhenUserExists() {
+    // Given
+    String existingEmail = "existing@example.com";
+    when(userRepository.existsByEmail(existingEmail)).thenReturn(true);
+
+    // When & Then
+    UserAlreadyExistsException exception = assertThrows(
+        UserAlreadyExistsException.class,
+        () -> userService.createUser("John", existingEmail)
+    );
     
-    /**
-     * 根據使用者 ID 查詢使用者資訊
-     * 
-     * @param userId 使用者的唯一識別碼，不能為 null
-     * @return 使用者資訊物件
-     * @throws IllegalArgumentException 當 userId 為 null 時
-     * @throws UserNotFoundException 當指定 ID 的使用者不存在時
-     */
-    public User getUserById(Long userId) {
-        // 實作邏輯
-    }
+    assertThat(exception.getMessage()).contains(existingEmail);
 }
 ```
 
-## 🗄️ 數據庫設計規範
-
-### 1. 表格命名規範
-
-#### 表格命名規則
-- **格式**: `TB_` + 表格功能描述
-- **大小寫**: 全大寫
-- **分隔符**: 底線 (`_`)
-
-```sql
--- ✅ 正確的表格命名
-TB_USER                    -- 使用者表
-TB_USER_ROLE              -- 使用者角色表
-TB_ORDER                  -- 訂單表
-TB_ORDER_ITEM             -- 訂單項目表
-TB_PRODUCT                -- 產品表
-TB_PRODUCT_CATEGORY       -- 產品分類表
-TB_SYSTEM_CONFIG          -- 系統配置表
-TB_AUDIT_LOG              -- 審計日誌表
-
--- ❌ 錯誤的表格命名
-user                      -- 沒有前綴，小寫
-User                      -- 沒有前綴，駝峰命名
-users                     -- 沒有前綴，小寫
-tb_user                   -- 前綴小寫
-USER                      -- 沒有前綴
-```
-
-#### 表格命名最佳實踐
-```sql
--- 主實體表
-TB_USER                   -- 使用者
-TB_PRODUCT               -- 產品
-TB_ORDER                 -- 訂單
-
--- 關聯表（多對多）
-TB_USER_ROLE             -- 使用者-角色關聯
-TB_PRODUCT_TAG           -- 產品-標籤關聯
-TB_ORDER_PROMOTION       -- 訂單-促銷關聯
-
--- 配置表
-TB_SYSTEM_CONFIG         -- 系統配置
-TB_EMAIL_TEMPLATE        -- 郵件模板
-TB_NOTIFICATION_SETTING  -- 通知設置
-
--- 日誌表
-TB_AUDIT_LOG             -- 審計日誌
-TB_ERROR_LOG             -- 錯誤日誌
-TB_ACCESS_LOG            -- 訪問日誌
-```
-
-### 2. 欄位命名規範
-
-#### 欄位命名規則
-- **大小寫**: 全大寫
-- **分隔符**: 底線 (`_`)
-- **描述性**: 清楚表達欄位用途
-
-```sql
--- ✅ 正確的欄位命名 (修正版本)
-CREATE TABLE TB_USER (
-    USER_ID                BIGSERIAL PRIMARY KEY,       -- 使用者ID
-    USER_NAME              VARCHAR(50) NOT NULL,        -- 使用者姓名
-    EMAIL_ADDRESS          VARCHAR(100) UNIQUE,         -- 信箱地址
-    PASSWORD_HASH          VARCHAR(255) NOT NULL,       -- 密碼雜湊
-    PHONE_NUMBER           VARCHAR(20),                 -- 電話號碼
-    DATE_OF_BIRTH          TIMESTAMPTZ,                 -- 出生日期 (修正為 TIMESTAMPTZ)
-    IS_ACTIVE              BOOLEAN DEFAULT TRUE,        -- 是否啟用
-    IS_EMAIL_VERIFIED      BOOLEAN DEFAULT FALSE,       -- 信箱是否驗證
-    LAST_LOGIN_TIME        TIMESTAMPTZ,                 -- 最後登入時間
-    CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    CREATED_BY             BIGINT,                      -- 建立者ID
-    UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    UPDATED_BY             BIGINT,                      -- 更新者ID
-    VERSION                INTEGER DEFAULT 0            -- 版本號（樂觀鎖）
-);
-```
-
-### 3. 資料類型規範
-
-#### 常用資料類型對應
-| 用途 | PostgreSQL 類型 | 說明 |
-|------|----------------|------|
-| 主鍵 | `BIGSERIAL` | 自增長整數 |
-| 外鍵 | `BIGINT` | 64位元整數 |
-| 短文字 | `VARCHAR(n)` | 可變長度字串 |
-| 長文字 | `TEXT` | 不限長度文字 |
-| 布林值 | `BOOLEAN` | 真/假值 |
-| 時間 | `TIMESTAMPTZ` | 帶時區時間戳 |
-| 金額 | `DECIMAL(19,4)` | 高精度小數 |
-| JSON | `JSONB` | 二進制JSON格式 |
-
-### 4. 索引設計規範
-
-```sql
--- ✅ 正確的索引設計
--- 單欄位索引
-CREATE INDEX IDX_USER_EMAIL ON TB_USER(EMAIL_ADDRESS);
-CREATE INDEX IDX_USER_CREATED_AT ON TB_USER(CREATED_AT);
-
--- 複合索引
-CREATE INDEX IDX_USER_STATUS_CREATED ON TB_USER(IS_ACTIVE, CREATED_AT);
-
--- 唯一索引
-CREATE UNIQUE INDEX UNQ_USER_EMAIL ON TB_USER(EMAIL_ADDRESS) WHERE IS_ACTIVE = TRUE;
-
--- 部分索引
-CREATE INDEX IDX_USER_ACTIVE ON TB_USER(USER_ID) WHERE IS_ACTIVE = TRUE;
-```
-
-### 5. 外鍵約束規範
-
-```sql
--- ✅ 正確的外鍵定義
-ALTER TABLE TB_ORDER 
-ADD CONSTRAINT FK_ORDER_USER 
-FOREIGN KEY (USER_ID) REFERENCES TB_USER(USER_ID)
-ON DELETE RESTRICT 
-ON UPDATE CASCADE;
-
--- 命名規範：FK_{子表}_{父表}
--- 或 FK_{子表}_{欄位名稱}
-```
-
-### 6. 檢查約束規範
-
-```sql
--- ✅ 資料驗證約束
-ALTER TABLE TB_USER 
-ADD CONSTRAINT CHK_USER_EMAIL_FORMAT 
-CHECK (EMAIL_ADDRESS ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$');
-
-ALTER TABLE TB_ORDER 
-ADD CONSTRAINT CHK_ORDER_AMOUNT_POSITIVE 
-CHECK (TOTAL_AMOUNT > 0);
-```
-
-### 7. 審計欄位規範
-
-```sql
--- ✅ 標準審計欄位 (所有表格必須包含)
-CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
-CREATED_BY             BIGINT NOT NULL,
-UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
-UPDATED_BY             BIGINT NOT NULL,
-VERSION                INTEGER DEFAULT 0 NOT NULL,
-
--- 軟刪除支援 (可選)
-IS_DELETED             BOOLEAN DEFAULT FALSE NOT NULL,
-DELETED_AT             TIMESTAMPTZ,
-DELETED_BY             BIGINT
-```
-
-### 8. 時間處理規範
-
-#### 數據庫時間規範
-- **時區**: 所有時間欄位必須使用 **UTC+0** 時區儲存
-- **資料類型**: 使用 `TIMESTAMPTZ` (PostgreSQL 推薦) 或 `TIMESTAMP`
-- **預設值**: 使用 `NOW()` 或 `CURRENT_TIMESTAMP` 設定預設時間
-- **PostgreSQL 強制規範**: 必須使用 `TIMESTAMPTZ` 確保時區處理正確
-
-```sql
--- ✅ 正確的時間欄位定義 (PostgreSQL)
-CREATE TABLE TB_USER (
-    USER_ID                BIGSERIAL PRIMARY KEY,
-    USER_NAME              VARCHAR(50) NOT NULL,
-    EMAIL_ADDRESS          VARCHAR(100) NOT NULL,
+#### 邊界值測試
+```java
+// ✅ 邊界值和邊緣情況測試
+@Test
+@DisplayName("應該處理邊界值和特殊情況")
+void shouldHandleBoundaryValues() {
+    // Test null values
+    assertThrows(IllegalArgumentException.class, 
+        () -> new User(null, "test@example.com"));
     
-    -- PostgreSQL 必須使用 TIMESTAMPTZ 類型
-    CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    LAST_LOGIN_TIME        TIMESTAMPTZ,
-    EXPIRED_AT             TIMESTAMPTZ,
-    DATE_OF_BIRTH          TIMESTAMPTZ,        -- 即使是日期也使用 TIMESTAMPTZ
-
-    VERSION                INTEGER DEFAULT 0
-);
-
--- ✅ 其他時間欄位範例
-CREATE TABLE TB_ORDER (
-    ORDER_ID               BIGSERIAL PRIMARY KEY,
-    USER_ID                BIGINT NOT NULL,
-
-    -- 所有時間相關欄位都使用 TIMESTAMPTZ
-    ORDER_DATE             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    DELIVERY_DATE          TIMESTAMPTZ,
-    CANCELLED_AT           TIMESTAMPTZ,
-    PAYMENT_TIME           TIMESTAMPTZ,
-
-    FOREIGN KEY (USER_ID) REFERENCES TB_USER(USER_ID)
-);
-
--- ❌ 錯誤的時間欄位定義
-CREATE TABLE TB_USER (
-    CREATED_TIME           TIMESTAMP,                    -- 禁止：沒有時區資訊
-    UPDATE_DATE            DATE,                         -- 禁止：只有日期，缺少時間
-    LOGIN_TIME             TIME,                         -- 禁止：只有時間，沒有日期
-    BIRTH_DATE             DATE,                         -- 禁止：即使是日期也要用 TIMESTAMPTZ
-    TIMESTAMP_FIELD        TIMESTAMP WITHOUT TIME ZONE   -- 禁止：明確排除時區
-);
-```
-
-#### PostgreSQL 時間類型規範
-| 類型 | 使用規範 | 說明 |
-|------|----------|------|
-| `TIMESTAMPTZ` | ✅ **強制使用** | 包含時區資訊，自動轉換為 UTC 儲存 |
-| `TIMESTAMP` | ❌ **禁止使用** | 沒有時區資訊，容易產生混亂 |
-| `DATE` | ❌ **禁止使用** | 只有日期，缺少時間精度 |
-| `TIME` | ❌ **禁止使用** | 只有時間，沒有日期資訊 |
-| `TIMESTAMP WITHOUT TIME ZONE` | ❌ **禁止使用** | 明確排除時區處理 |
-
-### 9. 資料庫版本控制規範
-
-#### Flyway 遷移腳本命名
-```
-V{版本號}__{描述}.sql
-
-範例：
-V1__Create_users_table.sql
-V2__Add_user_email_index.sql
-V3__Alter_user_add_phone_column.sql
-V4__Insert_default_admin_user.sql
-```
-
-#### 遷移腳本最佳實踐
-```sql
--- ✅ 正確的遷移腳本結構
--- V1__Create_users_table.sql
-
--- 表格創建
-CREATE TABLE TB_USER (
-    USER_ID                BIGSERIAL PRIMARY KEY,
-    USER_NAME              VARCHAR(50) NOT NULL,
-    EMAIL_ADDRESS          VARCHAR(100) NOT NULL,
+    // Test empty values
+    assertThrows(IllegalArgumentException.class, 
+        () -> new User("", "test@example.com"));
     
-    -- 審計欄位
-    CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
-    CREATED_BY             BIGINT NOT NULL,
-    UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
-    UPDATED_BY             BIGINT NOT NULL,
-    VERSION                INTEGER DEFAULT 0 NOT NULL
-);
+    // Test boundary lengths
+    String longName = "a".repeat(101);
+    assertThrows(IllegalArgumentException.class, 
+        () -> new User(longName, "test@example.com"));
+}
+```
 
--- 索引創建
-CREATE UNIQUE INDEX UNQ_USER_EMAIL ON TB_USER(EMAIL_ADDRESS);
-CREATE INDEX IDX_USER_CREATED_AT ON TB_USER(CREATED_AT);
+### 8. 測試組織結構
 
--- 註釋添加
-COMMENT ON TABLE TB_USER IS '使用者資料表';
-COMMENT ON COLUMN TB_USER.USER_ID IS '使用者唯一識別碼';
-COMMENT ON COLUMN TB_USER.USER_NAME IS '使用者姓名';
-COMMENT ON COLUMN TB_USER.EMAIL_ADDRESS IS '使用者信箱地址';
+```java
+// ✅ 測試類別組織範例
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+    
+    @Mock
+    private EmailService emailService;
+    
+    @InjectMocks
+    private UserService userService;
+
+    @Nested
+    @DisplayName("創建使用者測試")
+    class CreateUserTests {
+        
+        @Test
+        @DisplayName("成功創建使用者")
+        void shouldCreateUserSuccessfully() {
+            // 測試實現
+        }
+        
+        @Test
+        @DisplayName("信箱重複時拋出異常")
+        void shouldThrowExceptionWhenEmailDuplicate() {
+            // 測試實現
+        }
+    }
+
+    @Nested
+    @DisplayName("查詢使用者測試")
+    class FindUserTests {
+        
+        @Test
+        @DisplayName("根據ID查詢使用者")
+        void shouldFindUserById() {
+            // 測試實現
+        }
+        
+        @Test
+        @DisplayName("使用者不存在時拋出異常")
+        void shouldThrowExceptionWhenUserNotFound() {
+            // 測試實現
+        }
+    }
+}
 ```
