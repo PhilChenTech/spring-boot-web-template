@@ -1,0 +1,26 @@
+dependencies {
+    implementation project(":application")
+    implementation project(":domain")
+    implementation project(":common")
+    
+    // Web dependencies for inbound adapters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Data JPA dependencies for outbound adapters
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // PostgreSQL 資料庫驅動
+    runtimeOnly 'org.postgresql:postgresql'
+    
+    // OpenAPI documentation
+    compileOnly 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    
+    // Lombok for adapter layer
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    
+    // MapStruct with Lombok integration
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+}

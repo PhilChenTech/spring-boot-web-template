@@ -34,8 +34,9 @@ springboot-web-template/
 │   ├── handler/           # 指令/查詢處理器
 │   └── bus/               # 指令/查詢匯流排
 ├── infrastructure/        # 基礎設施層 - 外部依賴實現
-├── adapter-inbound/       # 入站適配器 - REST 控制器和 API
-├── adapter-outbound/      # 出站適配器 - 資料庫存取層
+├── adapter/               # 適配器層 - 包含入站和出站適配器
+│   ├── inbound/          # 入站適配器 - REST 控制器和 API
+│   └── outbound/         # 出站適配器 - 資料庫存取層
 ├── adapter-web/           # Web 適配器 - Web 特定配置
 ├── common/                # 公共模組 - 共用工具和基礎類別
 └── database/              # 資料庫遷移腳本和初始化文件

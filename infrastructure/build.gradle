@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(":adapter-outbound")
+    implementation project(":adapter")
     implementation project(":domain")
     // 移除對application層的直接依賴，保持依賴方向正確
     implementation project(":common")

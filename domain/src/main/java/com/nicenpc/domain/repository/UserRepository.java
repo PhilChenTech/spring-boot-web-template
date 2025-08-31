@@ -7,7 +7,7 @@ import java.util.Optional;
 
 /**
  * 使用者倉儲介面
- * 定義在 domain 層，由 adapter-outbound 層實作
+ * 定義在 domain 層，由 adapter.outbound 層實作
  */
 public interface UserRepository {
     
