@@ -592,16 +592,18 @@ public class GlobalExceptionHandler {
 
 ## 🧪 測試規範
 
+> **注意**: 本專案只使用單元測試，不進行整合測試。所有的測試都應該通過 Mock 來隔離外部依賴，確保測試的快速執行和獨立性。
+
 ### 1. 測試檔案命名
 
 ```
 UserTest.java                    # 單元測試
-UserControllerTest.java          # 控制器測試
-UserServiceTest.java             # 服務測試
-UserWebTest.java                 # 整合測試
+UserControllerTest.java          # 控制器單元測試
+UserServiceTest.java             # 服務單元測試
+UserRepositoryTest.java          # 倉庫單元測試
 ```
 
-### 2. 測試結構
+### 2. 單元測試結構
 
 ```java
 // ✅ 單元測試範例
@@ -638,42 +640,66 @@ class UserTest {
 }
 ```
 
-### 3. 整合測試
+### 3. 控制器單元測試
 
 ```java
-// ✅ 整合測試範例
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-class UserWebTest {
+// ✅ 控制器單元測試範例
+@ExtendWith(MockitoExtension.class)
+class UserControllerTest {
     
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Mock
+    private UserService userService;
     
-    @Autowired
-    private UserJpaRepository userRepository;
-    
-    @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
-    }
+    @InjectMocks
+    private UserController userController;
     
     @Test
     @DisplayName("應該成功創建使用者並返回 201 狀態碼")
     void shouldCreateUserSuccessfully() {
         // Given
         CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com");
+        User user = User.create("John Doe", "john@example.com");
+        when(userService.createUser(any(CreateUserCommand.class))).thenReturn(user);
         
         // When
-        ResponseEntity<ApiResponse> response = restTemplate.postForEntity(
-            "/api/v1/users", request, ApiResponse.class);
+        ResponseEntity<ApiResponse> response = userController.createUser(request);
         
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().isSuccess()).isTrue();
-        assertThat(userRepository.count()).isEqualTo(1);
+        verify(userService).createUser(any(CreateUserCommand.class));
+    }
+}
+```
+
+### 4. 服務單元測試
+
+```java
+// ✅ 服務單元測試範例
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+    
+    @Mock
+    private UserRepository userRepository;
+    
+    @InjectMocks
+    private UserService userService;
+    
+    @Test
+    @DisplayName("應該成功創建使用者")
+    void shouldCreateUserSuccessfully() {
+        // Given
+        CreateUserCommand command = new CreateUserCommand("John Doe", "john@example.com");
+        User user = User.create("John Doe", "john@example.com");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        
+        // When
+        User result = userService.createUser(command);
+        
+        // Then
+        assertThat(result.getName()).isEqualTo("John Doe");
+        assertThat(result.getEmail()).isEqualTo("john@example.com");
+        verify(userRepository).save(any(User.class));
     }
 }
 ```
@@ -733,11 +759,12 @@ public class User {
 - [ ] 程式碼遵循命名規範
 - [ ] 已添加必要的 JavaDoc 註解
 - [ ] 已編寫相應的單元測試
+- [ ] 單元測試覆蓋率達到 80% 以上
 - [ ] 異常處理完整且適當
 - [ ] API 文檔已更新
 - [ ] 無編譯警告或錯誤
-- [ ] 測試覆蓋率達到要求
 - [ ] 遵循 Clean Architecture 原則
+- [ ] Mock 物件使用適當
 
 ### Code Review 檢查點
 
