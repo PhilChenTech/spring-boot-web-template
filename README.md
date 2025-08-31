@@ -198,6 +198,7 @@ GRANT ALL PRIVILEGES ON DATABASE nice_npc_db TO nice_npc_user;
 
 ### ⚙️ 環境變數設定
 
+
 #### 方法一：使用 .env 檔案（推薦）
 ```bash
 # 複製環境範本檔案
@@ -206,24 +207,40 @@ cp infrastructure/src/main/resources/application-local.yml.example .env
 # 編輯環境變數
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=nice_npc_db_dev
+# 開發環境：
+DB_NAME=springboot_template_db_dev
+# 生產環境：
+DB_NAME=springboot_template_db_prod
+# 預設（一般環境）：
+DB_NAME=springboot_template
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 ```
 
 #### 方法二：手動設定環境變數
 ```bash
+
 # Linux/macOS
 export DB_HOST=localhost
 export DB_PORT=5432
-export DB_NAME=nice_npc_db_dev
+# 開發環境
+export DB_NAME=springboot_template_db_dev
+# 生產環境
+export DB_NAME=springboot_template_db_prod
+# 預設
+export DB_NAME=springboot_template
 export DB_USERNAME=postgres
 export DB_PASSWORD=your_password
 
 # Windows PowerShell
 $env:DB_HOST="localhost"
 $env:DB_PORT="5432"
-$env:DB_NAME="nice_npc_db_dev"
+# 開發環境
+$env:DB_NAME="springboot_template_db_dev"
+# 生產環境
+$env:DB_NAME="springboot_template_db_prod"
+# 預設
+$env:DB_NAME="springboot_template"
 $env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="your_password"
 ```
@@ -765,6 +782,70 @@ set-db-env.bat
 ## 📄 授權
 
 本專案採用 MIT 授權條款 - 查看 [LICENSE](LICENSE) 檔案了解詳情。
+
+
+## 🐳 Docker 部署
+
+### 使用 Docker Compose
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: nice_npc_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+```
+
+## 🔧 IDE 設定建議
+
+### VS Code 推薦外掛
+- Extension Pack for Java
+- Spring Boot Extension Pack
+- Thunder Client (API 測試)
+- GitLens
+
+### IntelliJ IDEA 設定
+- 啟用 Lombok 外掛
+- 配置 Code Style
+- 設定 Live Templates
+
+## 🚨 常見問題排除
+
+### 應用程式無法啟動
+1. 檢查 Java 版本是否為 21+
+2. 確認資料庫連線設定
+3. 檢查埠號是否被占用
+
+### 資料庫連線問題
+1. 確認 PostgreSQL 服務是否啟動
+2. 檢查防火牆設定
+3. 驗證資料庫認證資訊
+
+## ⚡ 效能調優
+
+### JVM 參數建議
+```bash
+-Xms512m -Xmx2g
+-XX:+UseG1GC
+-XX:MaxGCPauseMillis=200
+```
+
+### 資料庫最佳化
+- 設定適當的連線池大小
+- 啟用查詢快取
+- 定期分析慢查詢
+
+## 🆕 版本更新提醒
+
+> 本專案目前使用 Spring Boot 3.2.1，建議定期檢查依賴庫是否有新版本，並依照官方升級指南進行更新。
 
 ## 👥 團隊
 
