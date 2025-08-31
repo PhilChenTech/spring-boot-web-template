@@ -45,14 +45,6 @@ spring:
         jdbc:
           time_zone: UTC
 
-  # 生產環境 Flyway 設定 - 更嚴格的驗證
-  flyway:
-    enabled: true
-    baseline-on-migrate: false  # 生產環境不允許自動 baseline
-    validate-on-migrate: true
-    out-of-order: false         # 不允許亂序遷移
-    clean-disabled: true        # 禁用 clean 操作以防意外數據丟失
-
 # 生產環境日誌設定
 logging:
   level:

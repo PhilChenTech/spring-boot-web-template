@@ -17,9 +17,6 @@ REM 應用程式設定
 set APP_NAME=nice-npc-springboot-template
 set APP_VERSION=1.0.0
 
-REM Flyway 設定
-set FLYWAY_ENABLED=true
-
 REM 日誌設定
 set LOG_LEVEL_APP=INFO
 set LOG_LEVEL_ROOT=INFO

@@ -58,14 +58,6 @@ spring:
         use_sql_comments: ${JPA_SQL_COMMENTS:false}
         dialect: org.hibernate.dialect.PostgreSQLDialect
   
-  # Flyway 資料庫遷移設定
-  flyway:
-    enabled: ${FLYWAY_ENABLED:true}
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 0
-    validate-on-migrate: true
-  
   # Spring Security 配置 - 使用 app 配置
   security:
     user:
