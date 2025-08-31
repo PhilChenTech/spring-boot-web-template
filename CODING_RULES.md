@@ -13,6 +13,7 @@
 - [異常處理規範](#異常處理規範)
 - [測試規範](#測試規範)
 - [文檔規範](#文檔規範)
+- [數據庫設計規範](#數據庫設計規範)
 
 ## 🏗️ 架構原則
 
@@ -471,8 +472,8 @@ public class UserResponse {
     private Long id;
     private String name;
     private String email;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;        // 使用 Instant 替代 LocalDateTime
+    private Instant updatedAt;        // 使用 Instant 替代 LocalDateTime
 }
 
 // ✅ 統一回應格式
@@ -484,18 +485,18 @@ public class ApiResponse<T> {
     private boolean success;
     private String message;
     private T data;
-    private LocalDateTime timestamp;
+    private Instant timestamp;        // 使用 Instant 替代 LocalDateTime
     
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, "Success", data, LocalDateTime.now());
+        return new ApiResponse<>(true, "Success", data, Instant.now());
     }
     
     public static <T> ApiResponse<T> success(T data, String message) {
-        return new ApiResponse<>(true, message, data, LocalDateTime.now());
+        return new ApiResponse<>(true, message, data, Instant.now());
     }
     
     public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, message, null, LocalDateTime.now());
+        return new ApiResponse<>(false, message, null, Instant.now());
     }
 }
 ```
@@ -590,472 +591,421 @@ public class GlobalExceptionHandler {
 }
 ```
 
-## 🧪 測試規範
+## 🗄️ 數據庫設計規範
 
-> **注意**: 本專案只使用單元測試，不進行整合測試。所有的測試都應該通過 Mock 來隔離外部依賴，確保測試的快速執行和獨立性。
+### 1. 表格命名規範
 
-### 1. 測試框架和工具
+#### 表格命名規則
+- **格式**: `TB_` + 表格功能描述
+- **大小寫**: 全大寫
+- **分隔符**: 底線 (`_`)
 
-#### 測試框架
-- **JUnit 5** (Jupiter) - 主要測試框架
-- **Mockito** - Mock 框架，用於模擬依賴
-- **AssertJ** - 流暢的斷言庫
+```sql
+-- ✅ 正確的表格命名
+TB_USER                    -- 使用者表
+TB_USER_ROLE              -- 使用者角色表
+TB_ORDER                  -- 訂單表
+TB_ORDER_ITEM             -- 訂單項目表
+TB_PRODUCT                -- 產品表
+TB_PRODUCT_CATEGORY       -- 產品分類表
+TB_SYSTEM_CONFIG          -- 系統配置表
+TB_AUDIT_LOG              -- 審計日誌表
 
-#### 必要依賴配置
-```gradle
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.assertj:assertj-core'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-test {
-    useJUnitPlatform()
-}
+-- ❌ 錯誤的表格命名
+user                      -- 沒有前綴，小寫
+User                      -- 沒有前綴，駝峰命名
+users                     -- 沒有前綴，小寫
+tb_user                   -- 前綴小寫
+USER                      -- 沒有前綴
 ```
 
-### 2. 測試檔案命名
+#### 表格命名最佳實踐
+```sql
+-- 主實體表
+TB_USER                   -- 使用者
+TB_PRODUCT               -- 產品
+TB_ORDER                 -- 訂單
 
-```
-UserTest.java                    # 單元測試
-UserControllerTest.java          # 控制器單元測試
-UserServiceTest.java             # 服務單元測試
-UserRepositoryTest.java          # 倉庫單元測試
-```
+-- 關聯表（多對多）
+TB_USER_ROLE             -- 使用者-角色關聯
+TB_PRODUCT_TAG           -- 產品-標籤關聯
+TB_ORDER_PROMOTION       -- 訂單-促銷關聯
 
-### 3. 測試方法結構規範
+-- 配置表
+TB_SYSTEM_CONFIG         -- 系統配置
+TB_EMAIL_TEMPLATE        -- 郵件模板
+TB_NOTIFICATION_SETTING  -- 通知設置
 
-每個測試方法必須嚴格遵循 **Given-When-Then** 模式，且只能包含三個私有方法：
-
-#### 方法命名規範
-- `given...()` - 準備測試數據和環境
-- `when...()` - 執行被測試的操作
-- `then...()` - 驗證結果和斷言
-
-#### @DisplayName 格式規範
-測試描述必須使用 "given: ... when: ... then: ..." 的格式：
-
-```java
-@DisplayName("given: 有效的使用者資料 when: 創建使用者 then: 應該成功創建並返回正確資料")
+-- 日誌表
+TB_AUDIT_LOG             -- 審計日誌
+TB_ERROR_LOG             -- 錯誤日誌
+TB_ACCESS_LOG            -- 訪問日誌
 ```
 
-#### 標準測試結構模板
-```java
-@Test
-@DisplayName("given: 測試前置條件 when: 執行的操作 then: 預期的結果")
-void shouldDoSomethingWhenCondition() {
-    // 測試方法主體只能調用這三個方法
-    givenValidUserData();
-    whenCreatingUser();
-    thenUserShouldBeCreatedSuccessfully();
-}
+### 2. 欄位命名規範
 
-private void givenValidUserData() {
-    // 準備測試數據
-    // 設置 Mock 行為
-    // 初始化測試環境
-}
+#### 欄位命名規則
+- **大小寫**: 全大寫
+- **分隔符**: 底線 (`_`)
+- **描述性**: 清楚表達欄位用途
 
-private void whenCreatingUser() {
-    // 執行被測試的方法
-    // 捕獲結果或異常
-}
+```sql
+-- ✅ 正確的欄位命名
+CREATE TABLE TB_USER (
+    USER_ID                BIGINT PRIMARY KEY,          -- 使用者ID
+    USER_NAME              VARCHAR(50) NOT NULL,        -- 使用者姓名
+    EMAIL_ADDRESS          VARCHAR(100) UNIQUE,         -- 信箱地址
+    PASSWORD_HASH          VARCHAR(255) NOT NULL,       -- 密碼雜湊
+    PHONE_NUMBER           VARCHAR(20),                 -- 電話號碼
+    DATE_OF_BIRTH          DATE,                        -- 出生日期
+    IS_ACTIVE              BOOLEAN DEFAULT TRUE,        -- 是否啟用
+    IS_EMAIL_VERIFIED      BOOLEAN DEFAULT FALSE,       -- 信箱是否驗證
+    LAST_LOGIN_TIME        TIMESTAMP,                   -- 最後登入時間
+    CREATED_AT             TIMESTAMP DEFAULT NOW(),     -- 建立時間
+    CREATED_BY             BIGINT,                      -- 建立者ID
+    UPDATED_AT             TIMESTAMP DEFAULT NOW(),     -- 更新時間
+    UPDATED_BY             BIGINT,                      -- 更新者ID
+    VERSION                INTEGER DEFAULT 0            -- 版本號（樂觀鎖）
+);
 
-private void thenUserShouldBeCreatedSuccessfully() {
-    // 驗證結果 - 使用 AssertJ 斷言
-    // 驗證 Mock 調用 - 使用 Mockito
-}
+-- ❌ 錯誤的欄位命名
+CREATE TABLE TB_USER (
+    id                     BIGINT,                      -- 小寫
+    userName               VARCHAR(50),                 -- 駝峰命名
+    email_address          VARCHAR(100),                -- 部分小寫
+    Password_Hash          VARCHAR(255),                -- 混合大小寫
+    phone                  VARCHAR(20),                 -- 不夠描述性
+    dob                    DATE,                        -- 縮寫不清楚
+    active                 BOOLEAN,                     -- 不夠描述性
+    create_time            TIMESTAMP                    -- 不一致的命名
+);
 ```
 
-### 4. JUnit 5 和 AssertJ 使用規範
+#### 常用欄位命名模式
+```sql
+-- 主鍵欄位
+{TABLE_NAME}_ID                 -- USER_ID, PRODUCT_ID, ORDER_ID
 
-#### JUnit 5 註解使用
-```java
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+-- 外鍵欄位
+{REFERENCED_TABLE}_ID           -- USER_ID, CATEGORY_ID, PARENT_ID
 
-@ExtendWith(MockitoExtension.class)  // 啟用 Mockito
-class UserServiceTest {
+-- 狀態欄位
+{ENTITY}_STATUS                 -- ORDER_STATUS, USER_STATUS, PAYMENT_STATUS
+
+-- 布林欄位 (使用 IS_ 前綴)
+IS_ACTIVE                       -- 是否啟用
+IS_DELETED                      -- 是否刪除
+IS_VERIFIED                     -- 是否驗證
+IS_DEFAULT                      -- 是否預設
+
+-- 時間欄位 (必須使用 UTC+0 時區)
+CREATED_AT                      -- 建立時間 (UTC+0)
+UPDATED_AT                      -- 更新時間 (UTC+0)
+DELETED_AT                      -- 刪除時間 (UTC+0)
+EXPIRED_AT                      -- 過期時間 (UTC+0)
+LAST_LOGIN_TIME                 -- 最後登入時間 (UTC+0)
+SCHEDULED_TIME                  -- 排程時間 (UTC+0)
+
+-- 計數欄位
+{ENTITY}_COUNT                  -- USER_COUNT, ORDER_COUNT, VIEW_COUNT
+
+-- 金額欄位
+{TYPE}_AMOUNT                   -- TOTAL_AMOUNT, DISCOUNT_AMOUNT, TAX_AMOUNT
+
+-- 代碼欄位
+{ENTITY}_CODE                   -- USER_CODE, PRODUCT_CODE, ORDER_CODE
+
+-- 描述欄位
+{ENTITY}_DESCRIPTION            -- PRODUCT_DESCRIPTION, ERROR_DESCRIPTION
+{ENTITY}_REMARKS                -- ORDER_REMARKS, USER_REMARKS
+```
+
+### 8. 時間處理規範
+
+#### 數據庫時間規範
+- **時區**: 所有時間欄位必須使用 **UTC+0** 時區儲存
+- **資料類型**: 使用 `TIMESTAMP` 或 `TIMESTAMPTZ` (PostgreSQL)
+- **預設值**: 使用 `NOW()` 或 `CURRENT_TIMESTAMP` 設定預設時間
+
+```sql
+-- ✅ 正確的時間欄位定義
+CREATE TABLE TB_USER (
+    USER_ID                BIGSERIAL PRIMARY KEY,
+    USER_NAME              VARCHAR(50) NOT NULL,
+    EMAIL_ADDRESS          VARCHAR(100) UNIQUE NOT NULL,
     
-    @BeforeEach
-    void setUp() {
-        // 每個測試前的初始化
+    -- 時間欄位必須使用 UTC+0 時區
+    CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    LAST_LOGIN_TIME        TIMESTAMPTZ,
+    EXPIRED_AT             TIMESTAMPTZ,
+    
+    VERSION                INTEGER DEFAULT 0
+);
+
+-- ❌ 錯誤的時間欄位定義
+CREATE TABLE TB_USER (
+    CREATED_TIME           TIMESTAMP,                    -- 沒有明確指定 UTC
+    UPDATE_DATE            DATE,                         -- 使用 DATE 而非 TIMESTAMP
+    login_time             TIMESTAMP DEFAULT NOW()       -- 沒有 UTC 轉換
+);
+```
+
+#### Java 時間處理規範
+- **強制使用**: 所有時間處理必須使用 `java.time.Instant` 類
+- **禁止使用**: `java.util.Date`, `java.sql.Timestamp`, `LocalDateTime`, `LocalDate`, `LocalTime`, `ZonedDateTime`, `OffsetDateTime` (除非明確需要時區轉換顯示)
+- **時區轉換**: 僅在顯示層進行時區轉換，轉換後立即丟棄，不可存儲
+
+```java
+// ✅ 正確的時間處理
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+@Entity
+@Table(name = "TB_USER")
+public class UserEntity {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "USER_ID")
+    private Long userId;
+    
+    // 使用 Instant 處理所有時間欄位
+    @Column(name = "CREATED_AT")
+    private Instant createdAt;
+    
+    @Column(name = "UPDATED_AT")
+    private Instant updatedAt;
+    
+    @Column(name = "LAST_LOGIN_TIME")
+    private Instant lastLoginTime;
+    
+    @Column(name = "EXPIRED_AT")
+    private Instant expiredAt;
+    
+    @Column(name = "DATE_OF_BIRTH")
+    private Instant dateOfBirth;        // 即使是日期也使用 Instant
+    
+    // JPA 生命週期方法
+    @PrePersist
+    protected void onCreate() {
+        Instant now = Instant.now();  // 自動獲取 UTC 時間
+        createdAt = now;
+        updatedAt = now;
     }
     
-    @Test
-    @DisplayName("given: 條件 when: 操作 then: 結果")
-    void shouldDoSomething() {
-        // 測試邏輯
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();    // 自動更新為 UTC 時間
     }
 }
-```
 
-#### AssertJ 斷言規範
-```java
-import static org.assertj.core.api.Assertions.*;
-
-// ✅ 推薦：使用 AssertJ 流暢的斷言語法
-private void thenUserShouldBeCreated() {
-    // 基本斷言
-    assertThat(createdUser).isNotNull();
-    assertThat(createdUser.getName()).isEqualTo("John Doe");
-    assertThat(createdUser.getEmail()).isEqualTo("john@example.com");
-    assertThat(createdUser.isActive()).isTrue();
+// ✅ 正確的服務層時間處理
+@Service
+@RequiredArgsConstructor
+public class UserService {
     
-    // 集合斷言
-    assertThat(userList)
-        .hasSize(3)
-        .extracting(User::getName)
-        .containsExactly("John", "Jane", "Bob");
+    private final UserRepository userRepository;
     
-    // 異常斷言
-    assertThat(thrownException)
-        .isInstanceOf(UserValidationException.class)
-        .hasMessage("Name cannot be empty")
-        .hasNoCause();
-    
-    // 條件斷言
-    assertThat(createdUser)
-        .satisfies(user -> {
-            assertThat(user.getName()).isNotBlank();
-            assertThat(user.getEmail()).contains("@");
-            assertThat(user.getCreatedAt()).isBeforeOrEqualTo(LocalDateTime.now());
-        });
-}
-
-// ❌ 避免：使用 JUnit 的傳統斷言
-private void thenUserShouldBeCreated() {
-    assertTrue(createdUser != null);  // 不推薦
-    assertEquals("John Doe", createdUser.getName());  // 不推薦
-}
-```
-
-#### Mockito 使用規範
-```java
-import org.mockito.Mock;
-import org.mockito.InjectMocks;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
-
-@ExtendWith(MockitoExtension.class)
-class UserServiceTest {
-    
-    @Mock
-    private UserRepository userRepository;
-    
-    @InjectMocks
-    private UserService userService;
-    
-    private void givenUserRepositoryReturnsUser() {
-        // ✅ 推薦：設置 Mock 行為
-        when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+    public User createUser(CreateUserCommand command) {
+        User user = User.builder()
+            .name(command.getName())
+            .email(command.getEmail())
+            .createdAt(Instant.now())        // 使用 UTC 時間
+            .updatedAt(Instant.now())
+            .dateOfBirth(command.getDateOfBirth())  // 接收 Instant 類型
+            .build();
+            
+        return userRepository.save(user);
     }
     
-    private void thenRepositoryShouldBeCalled() {
-        // ✅ 推薦：驗證 Mock 調用
-        verify(userRepository).save(any(User.class));
-        verify(userRepository, times(1)).findById(1L);
-        verify(userRepository, never()).deleteById(any());
+    public void updateLastLoginTime(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.withId(userId));
+            
+        user.setLastLoginTime(Instant.now());  // 記錄 UTC 登入時間
+        userRepository.save(user);
+    }
+    
+    // 僅在顯示時進行時區轉換，不可存儲轉換後的結果
+    public String formatUserCreatedTime(User user, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+        ZonedDateTime zonedTime = user.getCreatedAt().atZone(zone);
+        return zonedTime.toString();  // 立即轉換為字串，不保存 ZonedDateTime
+    }
+    
+    // 日期計算也使用 Instant
+    public boolean isUserAdult(User user) {
+        Instant eighteenYearsAgo = Instant.now().minus(Duration.ofDays(365 * 18));
+        return user.getDateOfBirth().isBefore(eighteenYearsAgo);
+    }
+}
+
+// ❌ 錯誤的時間處理 - 完全禁止
+public class UserEntity {
+    
+    // 禁止使用的所有時間類型
+    private Date createdAt;              // 禁止使用 java.util.Date
+    private Timestamp updatedAt;         // 禁止使用 java.sql.Timestamp
+    private LocalDateTime lastLogin;     // 禁止使用 LocalDateTime
+    private LocalDate dateOfBirth;      // 禁止使用 LocalDate
+    private LocalTime loginTime;         // 禁止使用 LocalTime
+    private ZonedDateTime zonedTime;     // 禁止存儲 ZonedDateTime
+    private OffsetDateTime offsetTime;   // 禁止存儲 OffsetDateTime
+    private Calendar expiredTime;        // 禁止使用 Calendar
+}
+
+// ❌ 錯誤的服務層實現
+@Service
+public class UserService {
+    
+    public void wrongTimeHandling() {
+        // 禁止的操作
+        LocalDateTime now = LocalDateTime.now();     // 禁止
+        LocalDate today = LocalDate.now();           // 禁止
+        ZonedDateTime zoned = ZonedDateTime.now();   // 禁止存儲
         
-        // 使用 ArgumentCaptor 捕獲參數
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
+        // 正確做法：只使用 Instant
+        Instant now = Instant.now();
+    }
+}
+```
+#### DTO 時間處理規範
+```java
+// ✅ 正確的 DTO 時間處理
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserResponse {
+    
+    private Long id;
+    private String name;
+    private String email;
+    
+    // DTO 中也使用 Instant
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant lastLoginTime;
+    
+    // 可選：提供格式化方法供前端使用
+    public String getFormattedCreatedAt(String timeZone) {
+        if (createdAt == null) return null;
         
-        User capturedUser = userCaptor.getValue();
-        assertThat(capturedUser.getName()).isEqualTo("John Doe");
+        ZoneId zone = ZoneId.of(timeZone);
+        return createdAt.atZone(zone).toString();
+    }
+}
+
+// ✅ 或者提供專門的時間格式化 DTO
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class FormattedUserResponse {
+    
+    private Long id;
+    private String name;
+    private String email;
+    
+    // 原始 UTC 時間
+    private Instant createdAt;
+    private Instant updatedAt;
+    
+    // 格式化後的本地時間 (可選)
+    private String formattedCreatedAt;
+    private String formattedUpdatedAt;
+}
+```
+
+#### 控制器時間處理規範
+```java
+// ✅ 正確的控制器時間處理
+@RestController
+@RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
+public class UserController {
+    
+    private final UserService userService;
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "UTC") String timeZone) {
+        
+        User user = userService.getUserById(id);
+        
+        // 在控制器層處理時區轉換
+        UserResponse response = UserResponse.builder()
+            .id(user.getId())
+            .name(user.getName())
+            .email(user.getEmail())
+            .createdAt(user.getCreatedAt())      // 保持 UTC 時間
+            .updatedAt(user.getUpdatedAt())
+            .build();
+            
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+    
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+            @Valid @RequestBody CreateUserRequest request) {
+        
+        CreateUserCommand command = CreateUserCommand.builder()
+            .name(request.getName())
+            .email(request.getEmail())
+            .requestTime(Instant.now())          // 記錄請求時間 (UTC)
+            .build();
+            
+        User user = userService.createUser(command);
+        UserResponse response = mapToResponse(user);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.success(response, "User created successfully"));
     }
 }
 ```
 
-### 5. 單元測試結構範例
-
+#### 配置規範
 ```java
-// ✅ 正確的測試結構 - 使用 JUnit 5 和 AssertJ
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import static org.assertj.core.api.Assertions.*;
-
-class UserTest {
+// ✅ JPA 配置 - 確保時區處理正確
+@Configuration
+public class JpaConfig {
     
-    private String userName;
-    private String userEmail;
-    private User createdUser;
-    private Exception thrownException;
-    
-    @Test
-    @DisplayName("given: 有效的使用者姓名和信箱 when: 創建使用者 then: 應該成功創建並返回正確資料")
-    void shouldCreateValidUser() {
-        givenValidUserNameAndEmail();
-        whenCreatingUser();
-        thenUserShouldBeCreatedWithCorrectData();
-    }
-    
-    private void givenValidUserNameAndEmail() {
-        userName = "John Doe";
-        userEmail = "john@example.com";
-    }
-    
-    private void whenCreatingUser() {
-        createdUser = User.create(userName, userEmail);
-    }
-    
-    private void thenUserShouldBeCreatedWithCorrectData() {
-        // 使用 AssertJ 進行斷言
-        assertThat(createdUser).isNotNull();
-        assertThat(createdUser.getName()).isEqualTo(userName);
-        assertThat(createdUser.getEmail()).isEqualTo(userEmail);
-        assertThat(createdUser.isActive()).isTrue();
-    }
-    
-    @Test
-    @DisplayName("given: 空的使用者姓名 when: 創建使用者 then: 應該拋出 UserValidationException")
-    void shouldThrowExceptionWhenNameIsEmpty() {
-        givenEmptyUserName();
-        whenCreatingUser();
-        thenShouldThrowUserValidationException();
-    }
-    
-    private void givenEmptyUserName() {
-        userName = "";
-        userEmail = "john@example.com";
-    }
-    
-    private void whenCreatingUser() {
-        try {
-            createdUser = User.create(userName, userEmail);
-        } catch (Exception e) {
-            thrownException = e;
-        }
-    }
-    
-    private void thenShouldThrowUserValidationException() {
-        // 使用 AssertJ 進行異常斷言
-        assertThat(thrownException)
-            .isInstanceOf(UserValidationException.class)
-            .hasMessage("Name cannot be empty");
-        assertThat(createdUser).isNull();
+    @Bean
+    @Primary
+    public DataSource dataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:postgresql://localhost:5432/mydb");
+        config.setUsername("user");
+        config.setPassword("password");
+        
+        // 強制使用 UTC 時區
+        config.addDataSourceProperty("serverTimezone", "UTC");
+        config.addDataSourceProperty("useTimezone", "true");
+        
+        return new HikariDataSource(config);
     }
 }
 
-// ❌ 錯誤的測試結構 - 不遵循規範
-class UserTest {
+// ✅ Jackson 配置 - JSON 序列化時間格式
+@Configuration
+public class JacksonConfig {
     
-    @Test
-    void testCreateUser() {  // 方法名不清楚，沒有 @DisplayName
-        // 直接在測試方法中寫邏輯，沒有分離 Given-When-Then
-        String name = "John Doe";
-        User user = User.create(name, "john@example.com");
-        assertEquals("John Doe", user.getName());  // 使用 JUnit 舊斷言
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // 註冊 JavaTimeModule 處理 Instant
+        mapper.registerModule(new JavaTimeModule());
+        
+        // 設定 Instant 序列化格式為 ISO-8601 UTC
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.setTimeZone(TimeZone.getTimeZone("UTC"));
+        
+        return mapper;
     }
 }
-```
-
-### 6. 控制器單元測試範例
-
-```java
-// ✅ 控制器測試 - 使用 JUnit 5、Mockito 和 AssertJ
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
-
-@ExtendWith(MockitoExtension.class)
-class UserControllerTest {
-    
-    @Mock
-    private UserService userService;
-    
-    @InjectMocks
-    private UserController userController;
-    
-    private CreateUserRequest request;
-    private User mockUser;
-    private ResponseEntity<ApiResponse> response;
-    
-    @Test
-    @DisplayName("given: 有效的創建使用者請求 when: 創建使用者 then: 應該返回 201 狀態碼和成功回應")
-    void shouldCreateUserSuccessfully() {
-        givenValidCreateUserRequest();
-        whenCreatingUser();
-        thenShouldReturnCreatedStatus();
-    }
-    
-    private void givenValidCreateUserRequest() {
-        request = new CreateUserRequest("John Doe", "john@example.com");
-        mockUser = User.create("John Doe", "john@example.com");
-        when(userService.createUser(any(CreateUserCommand.class))).thenReturn(mockUser);
-    }
-    
-    private void whenCreatingUser() {
-        response = userController.createUser(request);
-    }
-    
-    private void thenShouldReturnCreatedStatus() {
-        // 使用 AssertJ 進行斷言
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().isSuccess()).isTrue();
-        
-        // 使用 Mockito 驗證互動
-        verify(userService).createUser(any(CreateUserCommand.class));
-    }
-}
-```
-
-### 7. 服務單元測試範例
-
-```java
-// ✅ 服務測試 - 使用 JUnit 5、Mockito 和 AssertJ
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.ArgumentCaptor;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
-
-@ExtendWith(MockitoExtension.class)
-class UserServiceTest {
-    
-    @Mock
-    private UserRepository userRepository;
-    
-    @InjectMocks
-    private UserService userService;
-    
-    private CreateUserCommand command;
-    private User mockSavedUser;
-    private User result;
-    
-    @Test
-    @DisplayName("given: 有效的創建使用者指令 when: 創建使用者 then: 應該成功創建並保存到資料庫")
-    void shouldCreateUserSuccessfully() {
-        givenCreateUserCommand();
-        whenCreatingUser();
-        thenUserShouldBeCreatedAndSaved();
-    }
-    
-    private void givenCreateUserCommand() {
-        command = new CreateUserCommand("John Doe", "john@example.com");
-        mockSavedUser = User.create("John Doe", "john@example.com");
-        when(userRepository.save(any(User.class))).thenReturn(mockSavedUser);
-    }
-    
-    private void whenCreatingUser() {
-        result = userService.createUser(command);
-    }
-    
-    private void thenUserShouldBeCreatedAndSaved() {
-        // 使用 AssertJ 進行斷言
-        assertThat(result).isNotNull();
-        assertThat(result.getName()).isEqualTo("John Doe");
-        assertThat(result.getEmail()).isEqualTo("john@example.com");
-        
-        // 使用 Mockito 驗證互動
-        verify(userRepository).save(any(User.class));
-        
-        // 使用 ArgumentCaptor 捕獲並驗證參數
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-        
-        User capturedUser = userCaptor.getValue();
-        assertThat(capturedUser.getName()).isEqualTo("John Doe");
-        assertThat(capturedUser.getEmail()).isEqualTo("john@example.com");
-    }
-}
-```
-
-### 8. 測試方法組織原則
-
-#### 強制規範
-- ✅ 每個測試方法**必須**只包含三個方法調用：`given...()`、`when...()`、`then...()`
-- ✅ 私有方法命名**必須**以 `given`、`when`、`then` 開頭
-- ✅ 測試數據和結果**必須**使用類別級別的欄位存儲
-- ✅ 每個測試場景**必須**有獨立的 Given-When-Then 方法組
-- ✅ **必須**使用 JUnit 5 註解和 AssertJ 斷言
-- ✅ **必須**使用 Mockito 進行依賴模擬
-
-#### 禁止事項
-- ❌ 測試方法中不能有直接的業務邏輯代碼
-- ❌ 不能在測試方法中直接寫斷言
-- ❌ 不能跳過任何一個 Given-When-Then 步驟
-- ❌ 不能在一個測試方法中測試多個場景
-- ❌ **禁止**使用 JUnit 4 或傳統的 JUnit 斷言（如 `assertEquals`, `assertTrue`）
-- ❌ **禁止**使用 `@RunWith` 註解（JUnit 4 語法）
-
-#### 命名建議
-```java
-// Given 方法命名範例
-private void givenValidUserData() { }
-private void givenEmptyUserName() { }
-private void givenExistingUser() { }
-private void givenMockUserRepository() { }
-
-// When 方法命名範例  
-private void whenCreatingUser() { }
-private void whenUpdatingUser() { }
-private void whenDeletingUser() { }
-private void whenSearchingUser() { }
-
-// Then 方法命名範例
-private void thenUserShouldBeCreated() { }
-private void thenShouldThrowException() { }
-private void thenShouldReturnNotFound() { }
-private void thenRepositoryShouldBeCalled() { }
-```
-
-#### AssertJ 常用斷言範例
-```java
-// 基本斷言
-assertThat(actualValue).isEqualTo(expectedValue);
-assertThat(actualValue).isNotNull();
-assertThat(actualValue).isNull();
-assertThat(actualBoolean).isTrue();
-assertThat(actualBoolean).isFalse();
-
-// 字串斷言
-assertThat(actualString).isNotBlank();
-assertThat(actualString).contains("substring");
-assertThat(actualString).startsWith("prefix");
-assertThat(actualString).endsWith("suffix");
-
-// 數值斷言
-assertThat(actualNumber).isGreaterThan(0);
-assertThat(actualNumber).isLessThanOrEqualTo(100);
-assertThat(actualNumber).isBetween(1, 10);
-
-// 集合斷言
-assertThat(actualList).hasSize(3);
-assertThat(actualList).isEmpty();
-assertThat(actualList).isNotEmpty();
-assertThat(actualList).contains(expectedItem);
-assertThat(actualList).containsOnly(item1, item2, item3);
-assertThat(actualList).extracting(User::getName).containsExactly("John", "Jane");
-
-// 異常斷言
-assertThat(thrownException).isInstanceOf(ExpectedException.class);
-assertThat(thrownException).hasMessage("Expected message");
-assertThat(thrownException).hasMessageContaining("partial message");
-assertThat(thrownException).hasNoCause();
-
-// 時間斷言
-assertThat(actualDateTime).isBefore(expectedDateTime);
-assertThat(actualDateTime).isAfter(expectedDateTime);
-assertThat(actualDateTime).isBeforeOrEqualTo(LocalDateTime.now());
 ```
 ## 📚 文檔規範
 
