@@ -45,6 +45,9 @@ subprojects {
     test {
         useJUnitPlatform()
         finalizedBy jacocoTestReport
+        
+        // 解決 Java 21 動態 Agent 載入警告
+        jvmArgs '-XX:+EnableDynamicAgentLoading'
     }
     
     jacocoTestReport {
@@ -52,6 +55,28 @@ subprojects {
         reports {
             xml.required = true
             html.required = true
+        }
+        
+        // 設定覆蓋率門檻
+        finalizedBy jacocoTestCoverageVerification
+    }
+    
+    jacocoTestCoverageVerification {
+        violationRules {
+            rule {
+                limit {
+                    minimum = 0.70 // 70% 最低覆蓋率要求
+                }
+            }
+            rule {
+                enabled = true
+                element = 'CLASS'
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.60 // 每個類別至少 60%
+                }
+            }
         }
     }
 }

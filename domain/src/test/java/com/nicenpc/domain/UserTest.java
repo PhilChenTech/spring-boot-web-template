@@ -205,4 +205,29 @@ class UserTest {
         assertTrue(result.contains("John"));
         assertTrue(result.contains("john@example.com"));
     }
+
+    @Test
+    void testSetId() {
+        // Given
+        User user = new User();
+        Long newId = 123L;
+        
+        // When
+        user.setId(newId);
+        
+        // Then
+        assertEquals(newId, user.getId());
+    }
+
+    @Test
+    void testSetIdWithNull() {
+        // Given
+        User user = new User(1L, "John", "john@example.com");
+        
+        // When
+        user.setId(null);
+        
+        // Then
+        assertNull(user.getId());
+    }
 }
