@@ -107,6 +107,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
             @Parameter(description = "創建使用者請求", required = true)
             @Valid @RequestBody CreateUserRequest request) {
+        // 創建使用者
         User user = UserDTOMapper.INSTANCE.toDomain(request);
         User savedUser = userService.createUser(user.getName(), user.getEmail());
         UserResponse response = UserDTOMapper.INSTANCE.toResponse(savedUser);
@@ -141,7 +142,7 @@ public class UserController {
             @Valid @RequestBody CreateUserRequest request) {
         
         // 更新使用者
-        User updatedUser = userService.updateUser(id, request.getName(), request.getEmail());
+        User updatedUser = userService.updateUser(id, request.name(), request.email());
         
         UserResponse response = UserDTOMapper.INSTANCE.toResponse(updatedUser);
         

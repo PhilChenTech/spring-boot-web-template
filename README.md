@@ -242,12 +242,42 @@ open build/reports/jacoco/test/html/index.html
 
 ## 🔧 開發指南
 
+### 程式碼標準
+
+本專案嚴格遵循 `CODING_RULES.yaml` 中定義的編碼標準：
+
+#### 資料庫設計標準
+- 表名使用 `TB_` 前綴，全大寫，如 `TB_USER`
+- 欄位名稱全大寫，使用底線分隔，如 `USER_NAME`、`USER_EMAIL`
+- 主鍵命名模式：`{TABLE_NAME}_ID`
+- 所有時間欄位使用 `TIMESTAMPTZ` 並存儲為 UTC+0
+- 必須包含審計欄位：`CREATED_AT`、`CREATED_BY`、`UPDATED_AT`、`UPDATED_BY`、`VERSION`
+
+#### DTO 設計標準
+- 使用 Java Record 實現不可變的 DTO 類別
+- 回應格式統一使用 `Instant` 而非 `LocalDateTime`
+- 包含緊湊建構函數進行參數驗證
+- 提供工廠方法方便對象創建
+
+#### 時間處理標準
+- 所有時間相關欄位使用 `Instant` 類型
+- 資料庫存儲時間必須為 UTC+0 時區
+- API 回應中的時間戳使用 ISO 8601 格式
+
 ### Lombok 整合
 
-本項目已集成 Lombok 來減少樣板代碼：
+根據分層架構原則，各層級的 Lombok 使用策略：
 
-#### 主要使用的註解：
-- `@Data` - 自動生成 getter、setter、equals、hashCode、toString
+#### Domain 層（最小化使用）
+- 避免使用複雜的 Lombok 註解
+- 手動實現業務邏輯相關方法
+- 保持領域模型的純淨性
+
+#### Application 層（依賴注入優先）
+- 主要使用 `@RequiredArgsConstructor` 進行依賴注入
+- 避免過度使用自動生成的方法
+
+#### Adapter 層（充分利用）
 - `@NoArgsConstructor` / `@AllArgsConstructor` - 構造函數
 - `@RequiredArgsConstructor` - 用於依賴注入
 - `@Builder` - 建造者模式

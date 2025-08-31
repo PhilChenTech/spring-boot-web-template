@@ -1,6 +1,8 @@
 package com.nicenpc.domain;
 
 import com.nicenpc.domain.exception.UserValidationException;
+
+import java.time.Instant;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -25,6 +27,11 @@ public class User {
     private String name;
     private String email;
     private boolean active = true;
+    private Instant createdAt;
+    private Long createdBy;
+    private Instant updatedAt;
+    private Long updatedBy;
+    private Integer version;
 
     /**
      * 預設建構函數
@@ -43,6 +50,22 @@ public class User {
         this.id = id;
         this.name = name;
         this.email = email;
+    }
+
+    /**
+     * 建構函數包含所有欄位
+     */
+    public User(Long id, String name, String email, boolean active, 
+                Instant createdAt, Long createdBy, Instant updatedAt, Long updatedBy, Integer version) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.active = active;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.updatedAt = updatedAt;
+        this.updatedBy = updatedBy;
+        this.version = version;
     }
 
     /**
@@ -140,6 +163,46 @@ public class User {
         this.active = active;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -162,6 +225,9 @@ public class User {
                ", name='" + name + '\'' +
                ", email='" + email + '\'' +
                ", active=" + active +
+               ", createdAt=" + createdAt +
+               ", updatedAt=" + updatedAt +
+               ", version=" + version +
                '}';
     }
 }

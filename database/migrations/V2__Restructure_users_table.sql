@@ -1,8 +1,8 @@
--- V1__Create_users_table.sql
--- 初始資料表建立腳本
+-- V2__Restructure_users_table.sql
+-- 重構使用者資料表以符合編碼標準
 
--- 建立使用者資料表
-CREATE TABLE IF NOT EXISTS TB_USER (
+-- 創建新的使用者資料表
+CREATE TABLE IF NOT EXISTS TB_USER_NEW (
     USER_ID BIGSERIAL PRIMARY KEY,
     USER_NAME VARCHAR(100) NOT NULL,
     USER_EMAIL VARCHAR(255) NOT NULL UNIQUE,
@@ -14,19 +14,29 @@ CREATE TABLE IF NOT EXISTS TB_USER (
     VERSION INTEGER DEFAULT 0 NOT NULL
 );
 
+-- 遷移現有資料
+INSERT INTO TB_USER_NEW (USER_NAME, USER_EMAIL, IS_ACTIVE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, VERSION)
+SELECT name, email, true, 
+       COALESCE(created_at AT TIME ZONE 'UTC', NOW() AT TIME ZONE 'UTC'),
+       1,
+       COALESCE(updated_at AT TIME ZONE 'UTC', NOW() AT TIME ZONE 'UTC'),
+       1,
+       0
+FROM users;
+
+-- 刪除舊表
+DROP TABLE IF EXISTS users CASCADE;
+
+-- 重新命名新表
+ALTER TABLE TB_USER_NEW RENAME TO TB_USER;
+
 -- 建立索引以提升查詢效能
 CREATE INDEX IF NOT EXISTS IDX_TB_USER_USER_EMAIL ON TB_USER(USER_EMAIL);
 CREATE INDEX IF NOT EXISTS IDX_TB_USER_USER_NAME ON TB_USER(USER_NAME);
-
--- 插入範例資料
-INSERT INTO TB_USER (USER_NAME, USER_EMAIL, CREATED_BY, UPDATED_BY) VALUES 
-('張三', 'zhangsan@example.com', 1, 1),
-('李四', 'lisi@example.com', 1, 1),
-('王五', 'wangwu@example.com', 1, 1)
-ON CONFLICT (USER_EMAIL) DO NOTHING;
+CREATE INDEX IF NOT EXISTS IDX_TB_USER_IS_ACTIVE ON TB_USER(IS_ACTIVE);
 
 -- 建立更新時間觸發器的函數
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+CREATE OR REPLACE FUNCTION update_tb_user_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.UPDATED_AT = (NOW() AT TIME ZONE 'UTC');
@@ -40,8 +50,9 @@ DROP TRIGGER IF EXISTS update_tb_user_updated_at ON TB_USER;
 CREATE TRIGGER update_tb_user_updated_at
     BEFORE UPDATE ON TB_USER
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_tb_user_updated_at_column();
 
+-- 添加表和欄位註釋
 COMMENT ON TABLE TB_USER IS '使用者資料表';
 COMMENT ON COLUMN TB_USER.USER_ID IS '使用者唯一識別碼';
 COMMENT ON COLUMN TB_USER.USER_NAME IS '使用者姓名';

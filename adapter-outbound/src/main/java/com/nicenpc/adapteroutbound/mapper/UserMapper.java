@@ -22,20 +22,18 @@ public interface UserMapper {
      * @param entity JPA 實體
      * @return 領域實體
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    @Mapping(target = "email", source = "email")
     User toDomain(UserEntity entity);
     
     /**
      * 將領域實體轉換為 JPA 實體
+     * 注意：審計欄位（createdAt、updatedAt等）由 JPA 自動管理
      * @param domain 領域實體
      * @return JPA 實體
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    @Mapping(target = "email", source = "email")
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "version", ignore = true)
     UserEntity toEntity(User domain);
 }

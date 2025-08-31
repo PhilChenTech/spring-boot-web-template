@@ -1,12 +1,13 @@
 package com.nicenpc.adapterinbound.exception;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * API 錯誤響應格式
  * 提供結構化的錯誤信息，包含錯誤代碼、追蹤ID等
+ * 使用 Instant 確保時間處理符合 UTC+0 標準
  */
 public class ErrorResponse {
     private String errorCode;
@@ -14,13 +15,13 @@ public class ErrorResponse {
     private String message;
     private String details;
     private int status;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private String path;
     private String traceId;
     private Map<String, Object> additionalInfo;
     
     public ErrorResponse() {
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = Instant.now();
         this.traceId = UUID.randomUUID().toString();
     }
     
@@ -67,11 +68,11 @@ public class ErrorResponse {
         this.status = status;
     }
     
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
     
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
     

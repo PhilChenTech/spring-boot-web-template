@@ -1,12 +1,12 @@
 package com.nicenpc.adapterinbound.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 統一API回應格式
  *
  * <p>提供標準化的API回應結構，包含成功狀態、訊息、資料和時間戳記。
- * 遵循統一回應格式的設計原則。</p>
+ * 遵循統一回應格式的設計原則，使用 Instant 處理時間以確保 UTC+0 標準。</p>
  *
  * @param <T> 回應資料的型別
  * @author Nice NPC Team
@@ -18,7 +18,7 @@ public class ApiResponse<T> {
     private boolean success;
     private String message;
     private T data;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private String path;
     private Metadata metadata;
     
@@ -26,7 +26,7 @@ public class ApiResponse<T> {
      * 預設建構函數
      */
     public ApiResponse() {
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = Instant.now();
         this.success = true;
     }
     
@@ -162,11 +162,11 @@ public class ApiResponse<T> {
         this.data = data;
     }
     
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
     
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
     
