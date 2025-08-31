@@ -1,71 +1,71 @@
 coding_rules:
-  title: "Nice NPC Spring Boot DDD Template - 程式碼規範"
-  description: "定義專案的程式碼編寫標準和最佳實踐，確保程式碼的一致性、可讀性和可維護性"
+  title: "Nice NPC Spring Boot DDD Template - Coding Standards"
+  description: "Defines coding standards and best practices for the project to ensure code consistency, readability, and maintainability"
 
   architecture_principles:
     layered_architecture:
       structure:
-        bootstrap: "應用程式啟動和配置"
-        domain: "領域層 - 純粹的業務邏輯"
-        application: "應用層 - CQRS 實現"
-        infrastructure: "基礎設施層 - 外部依賴實現"
-        adapter_inbound: "入站適配器 - REST 控制器"
-        adapter_outbound: "出站適配器 - 資料庫存取"
-        common: "共用工具和配置"
+        bootstrap: "Application startup and configuration"
+        domain: "Domain layer - Pure business logic"
+        application: "Application layer - CQRS implementation"
+        infrastructure: "Infrastructure layer - External dependency implementations"
+        adapter_inbound: "Inbound adapters - REST controllers"
+        adapter_outbound: "Outbound adapters - Database access"
+        common: "Common utilities and configurations"
 
     dependency_rules:
-      domain_layer: "不依賴任何其他層，保持純淨"
-      application_layer: "只依賴 Domain Layer"
-      infrastructure_layer: "可依賴 Domain 和 Application Layer"
-      adapter_layers: "可依賴所有內層"
-      bootstrap_layer: "可依賴所有層，負責組裝"
+      domain_layer: "Does not depend on any other layers, keeps pure"
+      application_layer: "Only depends on Domain Layer"
+      infrastructure_layer: "Can depend on Domain and Application layers"
+      adapter_layers: "Can depend on all inner layers"
+      bootstrap_layer: "Can depend on all layers, responsible for assembly"
 
     clean_architecture_principles:
-      - "內層不依賴外層"
-      - "業務邏輯與框架解耦"
-      - "介面隔離和依賴反轉"
-      - "單一職責原則"
+      - "Inner layers do not depend on outer layers"
+      - "Business logic decoupled from frameworks"
+      - "Interface segregation and dependency inversion"
+      - "Single responsibility principle"
 
   package_structure:
     base_package: "com.nicenpc"
     layers:
       domain:
-        description: "領域層"
+        description: "Domain layer"
         packages:
-          - "entity" # 領域實體
-          - "exception" # 領域異常
-          - "repository" # 倉庫介面
+          - "entity"     # Domain entities
+          - "exception"  # Domain exceptions
+          - "repository" # Repository interfaces
       application:
-        description: "應用層"
+        description: "Application layer"
         packages:
-          - "command" # CQRS 指令
-          - "query" # CQRS 查詢
-          - "handler" # 指令/查詢處理器
-          - "bus" # 指令/查詢匯流排
+          - "command"    # CQRS commands
+          - "query"      # CQRS queries
+          - "handler"    # Command/query handlers
+          - "bus"        # Command/query bus
       infrastructure:
-        description: "基礎設施層"
+        description: "Infrastructure layer"
         packages:
-          - "config" # 配置類
+          - "config"     # Configuration classes
       adapter:
-        description: "適配器層"
+        description: "Adapter layer"
         inbound:
-          - "controller" # REST 控制器
-          - "dto" # 資料傳輸物件
-          - "mapper" # DTO 映射器
-          - "exception" # 全域異常處理
+          - "controller" # REST controllers
+          - "dto"        # Data transfer objects
+          - "mapper"     # DTO mappers
+          - "exception"  # Global exception handling
         outbound:
-          - "entity" # JPA 實體
-          - "repository" # 倉庫實現
-          - "mapper" # 實體映射器
+          - "entity"     # JPA entities
+          - "repository" # Repository implementations
+          - "mapper"     # Entity mappers
       bootstrap:
-        description: "啟動層"
+        description: "Bootstrap layer"
         packages:
-          - "config" # Spring 配置
-          - "metrics" # 監控指標
+          - "config"     # Spring configurations
+          - "metrics"    # Monitoring metrics
       common:
-        description: "共用模組"
+        description: "Common modules"
         packages:
-          - "mapper" # MapStruct 配置
+          - "mapper"     # MapStruct configurations
 
   java_code_standards:
     naming_conventions:
@@ -81,7 +81,7 @@ coding_rules:
             - "user_controller"
       methods:
         format: "camelCase"
-        rules: "動詞開頭"
+        rules: "Start with verb"
         examples:
           correct:
             - "createUser"
@@ -92,7 +92,7 @@ coding_rules:
             - "get_all_users"
       variables:
         format: "camelCase"
-        rules: "有意義的名稱"
+        rules: "Use meaningful names"
         examples:
           correct:
             - "userRepository"
@@ -111,64 +111,64 @@ coding_rules:
 
     java_record_usage:
       applicable_scenarios:
-        - name: "DTO/VO 類別"
-          description: "資料傳輸物件"
-          use_case: "不可變的資料載體"
-        - name: "值物件"
-          description: "領域層使用"
-          use_case: "包含業務邏輯的不可變物件"
-        - name: "配置類別"
-          description: "應用程式配置"
-          use_case: "配置參數封裝"
-        - name: "API 回應包裝"
-          description: "統一 API 回應格式"
-          use_case: "包裝回應資料"
-        - name: "查詢結果投影"
-          description: "資料庫查詢結果"
-          use_case: "查詢特定欄位"
-        - name: "事件物件"
-          description: "領域事件"
-          use_case: "事件驅動架構"
-        - name: "指令物件"
+        - name: "DTO/VO classes"
+          description: "Data transfer objects"
+          use_case: "Immutable data carriers"
+        - name: "Value objects"
+          description: "Domain layer usage"
+          use_case: "Immutable objects with business logic"
+        - name: "Configuration classes"
+          description: "Application configuration"
+          use_case: "Configuration parameter encapsulation"
+        - name: "API response wrappers"
+          description: "Unified API response format"
+          use_case: "Response data wrapping"
+        - name: "Query result projections"
+          description: "Database query results"
+          use_case: "Query specific fields"
+        - name: "Event objects"
+          description: "Domain events"
+          use_case: "Event-driven architecture"
+        - name: "Command objects"
           description: "CQRS Commands"
-          use_case: "指令模式實作"
+          use_case: "Command pattern implementation"
 
       not_applicable_scenarios:
-        - name: "JPA 實體類別"
-          reason: "需要可變性和 JPA 註解支援"
-        - name: "業務邏輯複雜的領域實體"
-          reason: "包含複雜的狀態變更和業務規則"
-        - name: "需要繼承的類別"
-          reason: "Record 不支援繼承"
-        - name: "需要可變狀態的服務類別"
-          reason: "服務類別通常包含可變狀態和依賴"
+        - name: "JPA entity classes"
+          reason: "Require mutability and JPA annotation support"
+        - name: "Complex business logic domain entities"
+          reason: "Contain complex state changes and business rules"
+        - name: "Classes requiring inheritance"
+          reason: "Records do not support inheritance"
+        - name: "Service classes with mutable state"
+          reason: "Service classes typically contain mutable state and dependencies"
 
       best_practices:
-        - name: "使用 compact constructor 進行驗證"
-          description: "在 compact constructor 中進行參數驗證"
-        - name: "添加有用的工廠方法"
-          description: "提供靜態工廠方法便於建立物件"
-        - name: "實現有用的方法"
-          description: "添加業務相關的計算方法"
-        - name: "與 Bean Validation 結合使用"
-          description: "使用驗證註解確保資料正確性"
+        - name: "Use compact constructor for validation"
+          description: "Perform parameter validation in compact constructor"
+        - name: "Add useful factory methods"
+          description: "Provide static factory methods for convenient object creation"
+        - name: "Implement useful methods"
+          description: "Add business-related calculation methods"
+        - name: "Combine with Bean Validation"
+          description: "Use validation annotations to ensure data correctness"
 
     code_formatting:
-      indentation: "4 個空格"
+      indentation: "4 spaces"
       method_length_limit: 50
       class_length_limit: 500
       member_order:
-        - "靜態常數"
-        - "實例變數"
-        - "構造函數"
-        - "公有方法"
-        - "私有方法"
+        - "Static constants"
+        - "Instance variables"
+        - "Constructors"
+        - "Public methods"
+        - "Private methods"
 
   lombok_usage:
     layer_guidelines:
       domain_layer:
-        policy: "最小化使用"
-        description: "保持純淨"
+        policy: "Minimize usage"
+        description: "Keep pure"
         allowed_annotations:
           - "@Data"
           - "@NoArgsConstructor"
@@ -178,14 +178,14 @@ coding_rules:
           - "@Wither"
 
       application_layer:
-        policy: "依賴注入優先"
+        policy: "Dependency injection priority"
         recommended_annotations:
           - "@RequiredArgsConstructor"
-        description: "主要用於依賴注入"
+        description: "Mainly used for dependency injection"
 
       adapter_layers:
-        policy: "充分利用"
-        description: "可使用各種 Lombok 功能"
+        policy: "Full utilization"
+        description: "Can use various Lombok features"
         recommended_annotations:
           - "@Data"
           - "@NoArgsConstructor"
@@ -195,15 +195,15 @@ coding_rules:
       utility_classes:
         recommended_annotations:
           - "@UtilityClass"
-        description: "防止實例化"
+        description: "Prevent instantiation"
 
   spring_annotations:
     dependency_injection:
-      recommended_approach: "構造函數注入 + @RequiredArgsConstructor"
-      avoid: "欄位注入 (@Autowired on fields)"
+      recommended_approach: "Constructor injection + @RequiredArgsConstructor"
+      avoid: "Field injection (@Autowired on fields)"
 
     layer_annotations:
-      domain_layer: "無 Spring 註解"
+      domain_layer: "No Spring annotations"
       application_layer:
         - "@Service"
         - "@Component"
@@ -221,22 +221,22 @@ coding_rules:
       base_pattern: "/api/v{version}/{resource}"
       example: "/api/v1/users"
       methods:
-        GET: "查詢資源"
-        POST: "創建資源"
-        PUT: "更新整個資源"
-        DELETE: "刪除資源"
+        GET: "Query resources"
+        POST: "Create resources"
+        PUT: "Update entire resource"
+        DELETE: "Delete resources"
 
     http_status_codes:
       success:
-        200: "OK - 查詢成功"
-        201: "Created - 創建成功"
-        204: "No Content - 刪除成功"
+        200: "OK - Query successful"
+        201: "Created - Creation successful"
+        204: "No Content - Deletion successful"
       client_error:
-        400: "Bad Request - 請求參數錯誤"
-        404: "Not Found - 資源不存在"
-        409: "Conflict - 資源衝突"
+        400: "Bad Request - Request parameter error"
+        404: "Not Found - Resource not found"
+        409: "Conflict - Resource conflict"
       server_error:
-        500: "Internal Server Error - 伺服器錯誤"
+        500: "Internal Server Error - Server error"
 
     api_documentation:
       standard: "OpenAPI 3.0"
@@ -248,12 +248,12 @@ coding_rules:
 
     dto_design:
       request_dto_rules:
-        - "使用 Bean Validation 註解"
-        - "包含必要的驗證規則"
-        - "提供清楚的錯誤訊息"
+        - "Use Bean Validation annotations"
+        - "Include necessary validation rules"
+        - "Provide clear error messages"
       response_dto_rules:
-        - "使用 Instant 替代 LocalDateTime"
-        - "統一回應格式"
+        - "Use Instant instead of LocalDateTime"
+        - "Unified response format"
       unified_response_format:
         fields:
           - "success: boolean"
@@ -268,45 +268,45 @@ coding_rules:
       examples:
         - "UserNotFoundException"
         - "UserAlreadyExistsException"
-      factory_methods: "提供靜態工廠方法"
+      factory_methods: "Provide static factory methods"
 
     global_exception_handler:
       annotation: "@ControllerAdvice"
       responsibilities:
-        - "處理領域異常"
-        - "處理驗證異常"
-        - "處理通用異常"
-        - "記錄適當的日誌"
-      response_format: "統一的 ApiResponse 格式"
+        - "Handle domain exceptions"
+        - "Handle validation exceptions"
+        - "Handle generic exceptions"
+        - "Log appropriate messages"
+      response_format: "Unified ApiResponse format"
 
   testing_standards:
     principles:
-      - "只使用單元測試"
-      - "不依賴 Spring 框架或外部資源"
-      - "快速執行（幾秒內完成）"
-      - "隔離性（使用 Mock 隔離依賴）"
-      - "確定性（測試結果可重現且穩定）"
+      - "Use only unit tests"
+      - "No dependency on Spring framework or external resources"
+      - "Fast execution (complete within seconds)"
+      - "Isolation (use Mock to isolate dependencies)"
+      - "Deterministic (test results should be reproducible and stable)"
 
     testing_layers:
       domain_layer:
-        type: "純領域物件測試"
+        type: "Pure domain object tests"
         framework: "JUnit 5"
-        dependencies: "無框架依賴"
+        dependencies: "No framework dependencies"
       application_layer:
-        type: "單元測試"
+        type: "Unit tests"
         framework: "JUnit 5 + Mockito"
         annotations:
           - "@ExtendWith(MockitoExtension.class)"
           - "@Mock"
           - "@InjectMocks"
       controller_layer:
-        type: "單元測試"
+        type: "Unit tests"
         framework: "JUnit 5 + Mockito"
-        description: "Mock Service 測試 Controller"
+        description: "Mock Service to test Controller"
       repository_implementation:
-        type: "單元測試"
+        type: "Unit tests"
         framework: "JUnit 5 + Mockito"
-        description: "Mock JPA Repository 測試倉庫實現"
+        description: "Mock JPA Repository to test repository implementation"
 
     naming_conventions:
       pattern: "should{ExpectedBehavior}_When{Condition}"
@@ -316,49 +316,49 @@ coding_rules:
         - "shouldThrowUserAlreadyExistsException_WhenEmailAlreadyExists"
 
     coverage_requirements:
-      domain_layer: "95% 以上"
-      application_layer: "90% 以上"
-      adapter_layer: "85% 以上"
-      overall_project: "90% 以上"
+      domain_layer: "95% or higher"
+      application_layer: "90% or higher"
+      adapter_layer: "85% or higher"
+      overall_project: "90% or higher"
 
     best_practices:
       test_pattern: "Given-When-Then"
-      test_data_creation: "測試資料建構器模式"
-      mock_usage: "只 Mock 外部依賴"
-      exception_testing: "使用 assertThrows 驗證異常"
-      boundary_testing: "測試邊界值和特殊情況"
-      test_organization: "使用 @Nested 組織測試結構"
+      test_data_creation: "Test data builder pattern"
+      mock_usage: "Only mock external dependencies"
+      exception_testing: "Use assertThrows to verify exceptions"
+      boundary_testing: "Test boundary values and special cases"
+      test_organization: "Use @Nested to organize test structure"
 
   documentation_standards:
     api_documentation:
       tool: "OpenAPI 3.0 (Swagger)"
       requirements:
-        - "完整的 API 描述"
-        - "請求/回應範例"
-        - "錯誤代碼說明"
-        - "參數驗證規則"
+        - "Complete API description"
+        - "Request/response examples"
+        - "Error code descriptions"
+        - "Parameter validation rules"
 
     readme_requirements:
       per_module:
-        - "模組目的和職責"
-        - "依賴關係說明"
-        - "設定和使用方式"
-        - "範例程式碼"
-        - "故障排除指南"
+        - "Module purpose and responsibilities"
+        - "Dependency relationship descriptions"
+        - "Setup and usage instructions"
+        - "Example code"
+        - "Troubleshooting guides"
 
     code_comments:
       javadoc_requirements:
-        - "類別用途說明"
-        - "方法參數和回傳值"
-        - "異常說明"
-        - "使用範例"
-        - "作者和版本資訊"
+        - "Class purpose description"
+        - "Method parameters and return values"
+        - "Exception descriptions"
+        - "Usage examples"
+        - "Author and version information"
 
   database_design:
     table_naming:
       prefix: "TB_"
-      format: "全大寫"
-      separator: "底線 (_)"
+      format: "All uppercase"
+      separator: "Underscore (_)"
       examples:
         correct:
           - "TB_USER"
@@ -370,9 +370,9 @@ coding_rules:
           - "tb_user"
 
     column_naming:
-      format: "全大寫"
-      separator: "底線 (_)"
-      descriptive: "清楚表達欄位用途"
+      format: "All uppercase"
+      separator: "Underscore (_)"
+      descriptive: "Clearly express column purpose"
       patterns:
         primary_key: "{TABLE_NAME}_ID"
         foreign_key: "{REFERENCED_TABLE}_ID"
@@ -397,8 +397,8 @@ coding_rules:
         json: "JSONB"
 
     time_handling:
-      timezone_rule: "所有時間欄位必須使用 UTC+0 時區儲存"
-      postgresql_type: "TIMESTAMPTZ (強制使用)"
+      timezone_rule: "All timestamp fields must be stored in UTC+0 timezone"
+      postgresql_type: "TIMESTAMPTZ (mandatory)"
       prohibited_types:
         - "TIMESTAMP"
         - "DATE"
@@ -407,10 +407,10 @@ coding_rules:
 
     indexing:
       types:
-        single_column: "單欄位索引"
-        composite: "複合索引"
-        unique: "唯一索引"
-        partial: "部分索引"
+        single_column: "Single column index"
+        composite: "Composite index"
+        unique: "Unique index"
+        partial: "Partial index"
       naming_convention:
         index: "IDX_{TABLE}_{COLUMN}"
         unique: "UNQ_{TABLE}_{COLUMN}"
@@ -436,14 +436,13 @@ coding_rules:
 
     version_control:
       tool: "Flyway"
-      naming_pattern: "V{版本號}__{描述}.sql"
+      naming_pattern: "V{version_number}__{description}.sql"
       examples:
         - "V1__Create_users_table.sql"
         - "V2__Add_user_email_index.sql"
         - "V3__Alter_user_add_phone_column.sql"
       script_structure:
-        - "表格創建"
-        - "索引創建"
-        - "約束添加"
-        - "註釋添加"
-
+        - "Table creation"
+        - "Index creation"
+        - "Constraint addition"
+        - "Comment addition"
