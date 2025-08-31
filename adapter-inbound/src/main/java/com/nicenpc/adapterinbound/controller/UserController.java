@@ -21,6 +21,16 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 使用者控制器
+ *
+ * <p>提供使用者相關的 REST API 端點。
+ * 遵循 RESTful API 設計原則和 OpenAPI 規範。</p>
+ *
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 1.0
+ */
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -57,7 +67,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "根據 ID 取得使用者", description = "根據使用者 ID 取得特定使用者資訊")
+    @Operation(summary = "根據 ID 取得使用者", description = "根據使用者ID取得特定使用者資訊")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功取得使用者資訊",
                     content = @Content(mediaType = "application/json",
@@ -66,7 +76,7 @@ public class UserController {
                     content = @Content)
     })
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
-            @Parameter(description = "使用者 ID", required = true, example = "1")
+            @Parameter(description = "使用者ID", required = true, example = "1")
             @PathVariable Long id) {
         User user = userService.getUserById(id);
         UserResponse response = UserDTOMapper.INSTANCE.toResponse(user);
@@ -84,18 +94,18 @@ public class UserController {
     }
 
     @PostMapping
-    @Operation(summary = "建立新使用者", description = "建立一個新的使用者")
+    @Operation(summary = "創建新使用者", description = "根據提供的資訊創建一個新的使用者")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "成功建立使用者",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "使用者創建成功",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = UserResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求資料格式錯誤",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求參數錯誤",
                     content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "使用者已存在",
                     content = @Content)
     })
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
-            @Parameter(description = "建立使用者的請求資料", required = true)
+            @Parameter(description = "創建使用者請求", required = true)
             @Valid @RequestBody CreateUserRequest request) {
         User user = UserDTOMapper.INSTANCE.toDomain(request);
         User savedUser = userService.createUser(user.getName(), user.getEmail());
@@ -103,7 +113,7 @@ public class UserController {
         
         ApiResponse<UserResponse> apiResponse = ApiResponse.success(
             response, 
-            "使用者建立成功"
+            "使用者創建成功"
         );
         
         ApiResponse.Metadata metadata = new ApiResponse.Metadata();
@@ -121,13 +131,13 @@ public class UserController {
                             schema = @Schema(implementation = UserResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "找不到指定的使用者",
                     content = @Content),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求資料格式錯誤",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求參數錯誤",
                     content = @Content)
     })
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
-            @Parameter(description = "使用者 ID", required = true, example = "1")
+            @Parameter(description = "使用者ID", required = true, example = "1")
             @PathVariable Long id,
-            @Parameter(description = "更新使用者的請求資料", required = true)
+            @Parameter(description = "更新使用者請求", required = true)
             @Valid @RequestBody CreateUserRequest request) {
         
         // 更新使用者
@@ -155,7 +165,7 @@ public class UserController {
                     content = @Content)
     })
     public ResponseEntity<ApiResponse<Void>> deleteUser(
-            @Parameter(description = "使用者 ID", required = true, example = "1")
+            @Parameter(description = "使用者ID", required = true, example = "1")
             @PathVariable Long id) {
         
         // 刪除使用者

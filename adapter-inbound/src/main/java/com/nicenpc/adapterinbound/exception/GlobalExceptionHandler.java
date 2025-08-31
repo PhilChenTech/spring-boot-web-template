@@ -1,170 +1,148 @@
 package com.nicenpc.adapterinbound.exception;
 
+import com.nicenpc.adapterinbound.dto.ApiResponse;
 import com.nicenpc.domain.exception.DomainException;
 import com.nicenpc.domain.exception.UserValidationException;
 import com.nicenpc.domain.exception.UserNotFoundException;
 import com.nicenpc.domain.exception.UserAlreadyExistsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 全局異常處理器
- * 統一處理應用程式中的異常，提供結構化的錯誤響應
+ * 全域異常處理器
+ *
+ * <p>統一處理應用程式中的所有異常，提供一致的錯誤回應格式。
+ * 遵循異常處理的最佳實踐和規範。</p>
+ *
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 1.0
  */
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
     
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    
-    // 使用者相關異常處理
+    /**
+     * 處理使用者不存在異常
+     *
+     * @param ex 使用者不存在異常
+     * @return 404 錯誤回應
+     */
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
-            UserNotFoundException ex, WebRequest request) {
-        
-        logger.warn("使用者不存在: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.USER_NOT_FOUND,
-            ex.getMessage(),
-            HttpStatus.NOT_FOUND.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
+        log.warn("User not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.error(ex.getMessage()));
     }
     
+    /**
+     * 處理使用者已存在異常
+     *
+     * @param ex 使用者已存在異常
+     * @return 409 錯誤回應
+     */
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(
-            UserAlreadyExistsException ex, WebRequest request) {
-        
-        logger.warn("使用者已存在: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.USER_ALREADY_EXISTS,
-            ex.getMessage(),
-            HttpStatus.CONFLICT.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    public ResponseEntity<ApiResponse<Void>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        log.warn("User already exists: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(ApiResponse.error(ex.getMessage()));
     }
     
+    /**
+     * 處理使用者驗證異常
+     *
+     * @param ex 使用者驗證異常
+     * @return 400 錯誤回應
+     */
     @ExceptionHandler(UserValidationException.class)
-    public ResponseEntity<ErrorResponse> handleUserValidationException(
-            UserValidationException ex, WebRequest request) {
-        
-        logger.warn("使用者驗證失敗: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.USER_VALIDATION_ERROR,
-            ex.getMessage(),
-            HttpStatus.BAD_REQUEST.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    public ResponseEntity<ApiResponse<Void>> handleUserValidation(UserValidationException ex) {
+        log.warn("User validation failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(ex.getMessage()));
     }
     
+    /**
+     * 處理領域異常
+     *
+     * @param ex 領域異常
+     * @return 400 錯誤回應
+     */
     @ExceptionHandler(DomainException.class)
-    public ResponseEntity<ErrorResponse> handleDomainException(
-            DomainException ex, WebRequest request) {
-        
-        logger.warn("領域異常: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.BUSINESS_RULE_VIOLATION,
-            ex.getMessage(),
-            HttpStatus.BAD_REQUEST.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    public ResponseEntity<ApiResponse<Void>> handleDomainException(DomainException ex) {
+        log.warn("Domain exception: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(ex.getMessage()));
     }
     
-    // 系統異常處理
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex, WebRequest request) {
-        
-        logger.warn("非法參數: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.BAD_REQUEST,
-            ex.getMessage(),
-            HttpStatus.BAD_REQUEST.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-    }
-    
+    /**
+     * 處理參數驗證異常
+     *
+     * @param ex 方法參數驗證異常
+     * @return 400 錯誤回應，包含詳細的欄位錯誤資訊
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
-            MethodArgumentNotValidException ex, WebRequest request) {
-        
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            fieldErrors.put(fieldName, errorMessage);
-        });
-        
-        logger.warn("驗證失敗: {}", fieldErrors);
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.VALIDATION_ERROR,
-            "請求資料驗證失敗",
-            HttpStatus.BAD_REQUEST.value(),
-            getPath(request)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+            errors.put(error.getField(), error.getDefaultMessage())
         );
-        errorResponse.setAdditionalInfo(Map.of("fieldErrors", fieldErrors));
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
+        log.warn("Validation failed: {}", errors);
+
+        ApiResponse<Map<String, String>> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage("請求參數驗證失敗");
+        response.setData(errors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
+     * 處理非法參數異常
+     *
+     * @param ex 非法參數異常
+     * @return 400 錯誤回應
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(ex.getMessage()));
     }
     
+    /**
+     * 處理運行時異常
+     *
+     * @param ex 運行時異常
+     * @return 500 錯誤回應
+     */
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(
-            RuntimeException ex, WebRequest request) {
-        
-        logger.error("運行時異常: ", ex);
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.INTERNAL_SERVER_ERROR,
-            "系統運行時發生異常",
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
+        log.error("Runtime error occurred", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.error("系統發生錯誤"));
     }
     
+    /**
+     * 處理所有其他異常
+     *
+     * @param ex 通用異常
+     * @return 500 錯誤回應
+     */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex, WebRequest request) {
-        
-        logger.error("未處理異常: ", ex);
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            ErrorCode.INTERNAL_SERVER_ERROR,
-            "系統發生未預期的錯誤",
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            getPath(request)
-        );
-        
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-    }
-    
-    private String getPath(WebRequest request) {
-        return request.getDescription(false).replace("uri=", "");
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+        log.error("Unexpected error occurred", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.error("系統發生未預期的錯誤"));
     }
 }

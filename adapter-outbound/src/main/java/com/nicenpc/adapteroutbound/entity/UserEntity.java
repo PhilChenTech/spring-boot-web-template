@@ -11,8 +11,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * 使用者 JPA 實體
- * 負責資料庫映射，屬於基礎設施層
+ * 使用者JPA實體
+ *
+ * <p>對應資料庫中的users表，用於資料持久化操作。
+ * 遵循JPA規範和Clean Architecture原則。</p>
+ *
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 1.0
  */
 @Entity
 @Table(name = "users")
@@ -21,20 +27,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
     
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
     
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "active", nullable = false)
     @Builder.Default
-    private boolean active = true;
-    
+    private Boolean active = true;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

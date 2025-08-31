@@ -6,7 +6,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UserNotFoundException 單元測試
- * 純領域邏輯測試，不依賴 Spring 或外部系統
+ *
+ * <p>測試使用者不存在異常的各種情況，包括ID和Email兩種建構方式。
+ * 純領域邏輯測試，不依賴 Spring 或外部系統。</p>
+ *
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 1.0
  */
 class UserNotFoundExceptionTest {
 
@@ -21,12 +27,13 @@ class UserNotFoundExceptionTest {
         // Then
         assertNotNull(exception);
         assertEquals(userId, exception.getUserId());
+        assertNull(exception.getEmail());
         assertTrue(exception.getMessage().contains(userId.toString()));
-        assertTrue(exception.getMessage().contains("不存在"));
+        assertTrue(exception.getMessage().contains("找不到使用者"));
     }
 
     @Test
-    void testExceptionCreationWithMessage() {
+    void testExceptionCreationWithEmail() {
         // Given
         String email = "notfound@example.com";
         
@@ -35,9 +42,10 @@ class UserNotFoundExceptionTest {
         
         // Then
         assertNotNull(exception);
-        String expectedMessage = "使用者不存在: Email = " + email;
+        assertEquals(email, exception.getEmail());
+        assertNull(exception.getUserId());
+        String expectedMessage = "找不到使用者: Email = " + email;
         assertEquals(expectedMessage, exception.getMessage());
-        assertNull(exception.getUserId()); // 使用字串建構函式時 userId 應為 null
     }
 
     @Test
@@ -49,49 +57,50 @@ class UserNotFoundExceptionTest {
         UserNotFoundException exception = new UserNotFoundException(userId);
         
         // Then
-        String expectedMessage = "使用者不存在: ID = " + userId;
+        String expectedMessage = "找不到使用者: ID = " + userId;
         assertEquals(expectedMessage, exception.getMessage());
     }
 
     @Test
-    void testExceptionWithNullId() {
+    void testExceptionWithCustomMessage() {
         // Given
-        Long userId = null;
-        
-        // When
-        UserNotFoundException exception = new UserNotFoundException(userId);
-        
-        // Then
-        assertNotNull(exception);
-        assertNull(exception.getUserId());
-        assertTrue(exception.getMessage().contains("null"));
-    }
-
-    @Test
-    void testExceptionWithNullEmail() {
-        // Given
-        String email = null;
-        
-        // When
-        UserNotFoundException exception = new UserNotFoundException(email);
-        
-        // Then
-        assertNotNull(exception);
-        String expectedMessage = "使用者不存在: Email = null";
-        assertEquals(expectedMessage, exception.getMessage());
-        assertNull(exception.getUserId());
-    }
-
-    @Test
-    void testExceptionInheritance() {
-        // Given
+        String customMessage = "Custom not found message";
         Long userId = 789L;
-        
+
+        // When
+        UserNotFoundException exception = new UserNotFoundException(customMessage, userId);
+
+        // Then
+        assertNotNull(exception);
+        assertEquals(customMessage, exception.getMessage());
+        assertEquals(userId, exception.getUserId());
+        assertNull(exception.getEmail());
+    }
+
+    @Test
+    void testExceptionIsInstanceOfDomainException() {
+        // Given
+        Long userId = 999L;
+
         // When
         UserNotFoundException exception = new UserNotFoundException(userId);
-        
+
         // Then
         assertTrue(exception instanceof DomainException);
         assertTrue(exception instanceof RuntimeException);
+    }
+
+    @Test
+    void testExceptionWithEmptyEmail() {
+        // Given
+        String email = "";
+
+        // When
+        UserNotFoundException exception = new UserNotFoundException(email);
+
+        // Then
+        assertNotNull(exception);
+        assertEquals(email, exception.getEmail());
+        assertTrue(exception.getMessage().contains("Email = "));
     }
 }

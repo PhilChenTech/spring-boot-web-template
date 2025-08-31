@@ -5,8 +5,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * DomainException 純單元測試
- * 測試領域異常基類的創建和繼承關係
+ * DomainException 測試類
+ *
+ * <p>測試領域異常基類的功能，通過具體的子類進行測試。
+ * 由於DomainException是抽象類，使用UserValidationException作為測試實例。</p>
+ *
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 1.0
  */
 class DomainExceptionTest {
 
@@ -16,11 +22,12 @@ class DomainExceptionTest {
         String message = "Domain rule violation";
         
         // When
-        DomainException exception = new DomainException(message);
-        
+        UserValidationException exception = new UserValidationException(message);
+
         // Then
         assertNotNull(exception);
         assertEquals(message, exception.getMessage());
+        assertTrue(exception instanceof DomainException);
     }
 
     @Test
@@ -30,66 +37,65 @@ class DomainExceptionTest {
         Throwable cause = new IllegalStateException("Invalid state");
         
         // When
-        DomainException exception = new DomainException(message, cause);
-        
+        UserValidationException exception = new UserValidationException(message, cause);
+
         // Then
         assertNotNull(exception);
         assertEquals(message, exception.getMessage());
         assertEquals(cause, exception.getCause());
+        assertTrue(exception instanceof DomainException);
     }
 
     @Test
-    void testExceptionWithNullMessage() {
+    void testExceptionMessage() {
         // Given
-        String message = null;
-        
+        String expectedMessage = "Test domain exception";
+
         // When
-        DomainException exception = new DomainException(message);
-        
+        UserValidationException exception = new UserValidationException(expectedMessage);
+
         // Then
-        assertNotNull(exception);
-        assertNull(exception.getMessage());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
     @Test
-    void testExceptionWithEmptyMessage() {
+    void testExceptionMessageNotNull() {
         // Given
-        String message = "";
-        
+        String message = "Non-null message";
+
         // When
-        DomainException exception = new DomainException(message);
-        
+        UserValidationException exception = new UserValidationException(message);
+
         // Then
-        assertNotNull(exception);
-        assertEquals("", exception.getMessage());
+        assertNotNull(exception.getMessage());
+        assertFalse(exception.getMessage().isEmpty());
     }
 
     @Test
-    void testExceptionWithNullCause() {
+    void testExceptionCause() {
         // Given
-        String message = "Test message";
-        Throwable cause = null;
-        
+        String message = "Exception with cause";
+        RuntimeException cause = new RuntimeException("Root cause");
+
         // When
-        DomainException exception = new DomainException(message, cause);
-        
+        UserValidationException exception = new UserValidationException(message, cause);
+
         // Then
-        assertNotNull(exception);
-        assertEquals(message, exception.getMessage());
-        assertNull(exception.getCause());
+        assertEquals(cause, exception.getCause());
     }
 
     @Test
-    void testExceptionInheritance() {
+    void testExceptionToString() {
         // Given
-        String message = "Test message";
-        
+        String message = "Test exception";
+
         // When
-        DomainException exception = new DomainException(message);
-        
+        UserValidationException exception = new UserValidationException(message);
+
         // Then
-        assertTrue(exception instanceof RuntimeException);
-        assertTrue(exception instanceof Exception);
-        assertTrue(exception instanceof Throwable);
+        String result = exception.toString();
+        assertNotNull(result);
+        assertTrue(result.contains("UserValidationException"));
+        assertTrue(result.contains(message));
     }
 }

@@ -4,9 +4,17 @@ import java.time.LocalDateTime;
 
 /**
  * 統一API回應格式
- * 為所有成功的API回應提供一致的結構
+ *
+ * <p>提供標準化的API回應結構，包含成功狀態、訊息、資料和時間戳記。
+ * 遵循統一回應格式的設計原則。</p>
+ *
+ * @param <T> 回應資料的型別
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 1.0
  */
 public class ApiResponse<T> {
+
     private boolean success;
     private String message;
     private T data;
@@ -14,22 +22,43 @@ public class ApiResponse<T> {
     private String path;
     private Metadata metadata;
     
+    /**
+     * 預設建構函數
+     */
     public ApiResponse() {
         this.timestamp = LocalDateTime.now();
         this.success = true;
     }
     
+    /**
+     * 包含資料的建構函數
+     *
+     * @param data 回應資料
+     */
     public ApiResponse(T data) {
         this();
         this.data = data;
     }
     
+    /**
+     * 包含資料和訊息的建構函數
+     *
+     * @param data 回應資料
+     * @param message 回應訊息
+     */
     public ApiResponse(T data, String message) {
         this();
         this.data = data;
         this.message = message;
     }
     
+    /**
+     * 完整的建構函數
+     *
+     * @param data 回應資料
+     * @param message 回應訊息
+     * @param path 請求路徑
+     */
     public ApiResponse(T data, String message, String path) {
         this();
         this.data = data;
@@ -38,27 +67,77 @@ public class ApiResponse<T> {
     }
     
     // 靜態工廠方法
+
+    /**
+     * 創建成功回應
+     *
+     * @param <T> 資料型別
+     * @param data 回應資料
+     * @return 成功的API回應
+     */
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(data);
     }
     
+    /**
+     * 創建包含訊息的成功回應
+     *
+     * @param <T> 資料型別
+     * @param data 回應資料
+     * @param message 成功訊息
+     * @return 成功的API回應
+     */
     public static <T> ApiResponse<T> success(T data, String message) {
         return new ApiResponse<>(data, message);
     }
     
+    /**
+     * 創建包含路徑的成功回應
+     *
+     * @param <T> 資料型別
+     * @param data 回應資料
+     * @param message 成功訊息
+     * @param path 請求路徑
+     * @return 成功的API回應
+     */
     public static <T> ApiResponse<T> success(T data, String message, String path) {
         return new ApiResponse<>(data, message, path);
     }
     
+    /**
+     * 創建無資料的成功回應
+     *
+     * @return 成功的API回應
+     */
     public static ApiResponse<Void> success() {
         return new ApiResponse<>(null, "操作成功");
     }
     
+    /**
+     * 創建包含訊息的無資料成功回應
+     *
+     * @param message 成功訊息
+     * @return 成功的API回應
+     */
     public static ApiResponse<Void> success(String message) {
         return new ApiResponse<>(null, message);
     }
     
+    /**
+     * 創建錯誤回應
+     *
+     * @param message 錯誤訊息
+     * @return 錯誤的API回應
+     */
+    public static ApiResponse<Void> error(String message) {
+        ApiResponse<Void> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage(message);
+        return response;
+    }
+
     // Getters and Setters
+
     public boolean isSuccess() {
         return success;
     }
@@ -108,10 +187,12 @@ public class ApiResponse<T> {
     }
     
     /**
-     * 回應元資料
-     * 包含分頁、排序等額外資訊
+     * 元資料類別
+     *
+     * <p>包含分頁、排序等額外資訊。</p>
      */
     public static class Metadata {
+
         private Long totalElements;
         private Integer totalPages;
         private Integer currentPage;
@@ -120,8 +201,19 @@ public class ApiResponse<T> {
         private String sortDirection;
         private String version;
         
+        /**
+         * 預設建構函數
+         */
         public Metadata() {}
         
+        /**
+         * 分頁建構函數
+         *
+         * @param totalElements 總元素數
+         * @param totalPages 總頁數
+         * @param currentPage 當前頁數
+         * @param pageSize 每頁大小
+         */
         public Metadata(Long totalElements, Integer totalPages, Integer currentPage, Integer pageSize) {
             this.totalElements = totalElements;
             this.totalPages = totalPages;
@@ -130,6 +222,7 @@ public class ApiResponse<T> {
         }
         
         // Getters and Setters
+
         public Long getTotalElements() {
             return totalElements;
         }
