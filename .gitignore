@@ -99,3 +99,5 @@ coverage/
 # JUnit test results
 test-results/
 test-reports/
+/.github/
+/.claude/
