@@ -772,6 +772,291 @@ class UserServiceTest {
     }
 }
 ```
+
+### 5. 單元測試結構範例
+
+```java
+// ✅ 正確的測試結構 - 使用 JUnit 5 和 AssertJ
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import static org.assertj.core.api.Assertions.*;
+
+class UserTest {
+    
+    private String userName;
+    private String userEmail;
+    private User createdUser;
+    private Exception thrownException;
+    
+    @Test
+    @DisplayName("given: 有效的使用者姓名和信箱 when: 創建使用者 then: 應該成功創建並返回正確資料")
+    void shouldCreateValidUser() {
+        givenValidUserNameAndEmail();
+        whenCreatingUser();
+        thenUserShouldBeCreatedWithCorrectData();
+    }
+    
+    private void givenValidUserNameAndEmail() {
+        userName = "John Doe";
+        userEmail = "john@example.com";
+    }
+    
+    private void whenCreatingUser() {
+        createdUser = User.create(userName, userEmail);
+    }
+    
+    private void thenUserShouldBeCreatedWithCorrectData() {
+        // 使用 AssertJ 進行斷言
+        assertThat(createdUser).isNotNull();
+        assertThat(createdUser.getName()).isEqualTo(userName);
+        assertThat(createdUser.getEmail()).isEqualTo(userEmail);
+        assertThat(createdUser.isActive()).isTrue();
+    }
+    
+    @Test
+    @DisplayName("given: 空的使用者姓名 when: 創建使用者 then: 應該拋出 UserValidationException")
+    void shouldThrowExceptionWhenNameIsEmpty() {
+        givenEmptyUserName();
+        whenCreatingUser();
+        thenShouldThrowUserValidationException();
+    }
+    
+    private void givenEmptyUserName() {
+        userName = "";
+        userEmail = "john@example.com";
+    }
+    
+    private void whenCreatingUser() {
+        try {
+            createdUser = User.create(userName, userEmail);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+    
+    private void thenShouldThrowUserValidationException() {
+        // 使用 AssertJ 進行異常斷言
+        assertThat(thrownException)
+            .isInstanceOf(UserValidationException.class)
+            .hasMessage("Name cannot be empty");
+        assertThat(createdUser).isNull();
+    }
+}
+
+// ❌ 錯誤的測試結構 - 不遵循規範
+class UserTest {
+    
+    @Test
+    void testCreateUser() {  // 方法名不清楚，沒有 @DisplayName
+        // 直接在測試方法中寫邏輯，沒有分離 Given-When-Then
+        String name = "John Doe";
+        User user = User.create(name, "john@example.com");
+        assertEquals("John Doe", user.getName());  // 使用 JUnit 舊斷言
+    }
+}
+```
+
+### 6. 控制器單元測試範例
+
+```java
+// ✅ 控制器測試 - 使用 JUnit 5、Mockito 和 AssertJ
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+
+@ExtendWith(MockitoExtension.class)
+class UserControllerTest {
+    
+    @Mock
+    private UserService userService;
+    
+    @InjectMocks
+    private UserController userController;
+    
+    private CreateUserRequest request;
+    private User mockUser;
+    private ResponseEntity<ApiResponse> response;
+    
+    @Test
+    @DisplayName("given: 有效的創建使用者請求 when: 創建使用者 then: 應該返回 201 狀態碼和成功回應")
+    void shouldCreateUserSuccessfully() {
+        givenValidCreateUserRequest();
+        whenCreatingUser();
+        thenShouldReturnCreatedStatus();
+    }
+    
+    private void givenValidCreateUserRequest() {
+        request = new CreateUserRequest("John Doe", "john@example.com");
+        mockUser = User.create("John Doe", "john@example.com");
+        when(userService.createUser(any(CreateUserCommand.class))).thenReturn(mockUser);
+    }
+    
+    private void whenCreatingUser() {
+        response = userController.createUser(request);
+    }
+    
+    private void thenShouldReturnCreatedStatus() {
+        // 使用 AssertJ 進行斷言
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isSuccess()).isTrue();
+        
+        // 使用 Mockito 驗證互動
+        verify(userService).createUser(any(CreateUserCommand.class));
+    }
+}
+```
+
+### 7. 服務單元測試範例
+
+```java
+// ✅ 服務測試 - 使用 JUnit 5、Mockito 和 AssertJ
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+    
+    @Mock
+    private UserRepository userRepository;
+    
+    @InjectMocks
+    private UserService userService;
+    
+    private CreateUserCommand command;
+    private User mockSavedUser;
+    private User result;
+    
+    @Test
+    @DisplayName("given: 有效的創建使用者指令 when: 創建使用者 then: 應該成功創建並保存到資料庫")
+    void shouldCreateUserSuccessfully() {
+        givenCreateUserCommand();
+        whenCreatingUser();
+        thenUserShouldBeCreatedAndSaved();
+    }
+    
+    private void givenCreateUserCommand() {
+        command = new CreateUserCommand("John Doe", "john@example.com");
+        mockSavedUser = User.create("John Doe", "john@example.com");
+        when(userRepository.save(any(User.class))).thenReturn(mockSavedUser);
+    }
+    
+    private void whenCreatingUser() {
+        result = userService.createUser(command);
+    }
+    
+    private void thenUserShouldBeCreatedAndSaved() {
+        // 使用 AssertJ 進行斷言
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("John Doe");
+        assertThat(result.getEmail()).isEqualTo("john@example.com");
+        
+        // 使用 Mockito 驗證互動
+        verify(userRepository).save(any(User.class));
+        
+        // 使用 ArgumentCaptor 捕獲並驗證參數
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        
+        User capturedUser = userCaptor.getValue();
+        assertThat(capturedUser.getName()).isEqualTo("John Doe");
+        assertThat(capturedUser.getEmail()).isEqualTo("john@example.com");
+    }
+}
+```
+
+### 8. 測試方法組織原則
+
+#### 強制規範
+- ✅ 每個測試方法**必須**只包含三個方法調用：`given...()`、`when...()`、`then...()`
+- ✅ 私有方法命名**必須**以 `given`、`when`、`then` 開頭
+- ✅ 測試數據和結果**必須**使用類別級別的欄位存儲
+- ✅ 每個測試場景**必須**有獨立的 Given-When-Then 方法組
+- ✅ **必須**使用 JUnit 5 註解和 AssertJ 斷言
+- ✅ **必須**使用 Mockito 進行依賴模擬
+
+#### 禁止事項
+- ❌ 測試方法中不能有直接的業務邏輯代碼
+- ❌ 不能在測試方法中直接寫斷言
+- ❌ 不能跳過任何一個 Given-When-Then 步驟
+- ❌ 不能在一個測試方法中測試多個場景
+- ❌ **禁止**使用 JUnit 4 或傳統的 JUnit 斷言（如 `assertEquals`, `assertTrue`）
+- ❌ **禁止**使用 `@RunWith` 註解（JUnit 4 語法）
+
+#### 命名建議
+```java
+// Given 方法命名範例
+private void givenValidUserData() { }
+private void givenEmptyUserName() { }
+private void givenExistingUser() { }
+private void givenMockUserRepository() { }
+
+// When 方法命名範例  
+private void whenCreatingUser() { }
+private void whenUpdatingUser() { }
+private void whenDeletingUser() { }
+private void whenSearchingUser() { }
+
+// Then 方法命名範例
+private void thenUserShouldBeCreated() { }
+private void thenShouldThrowException() { }
+private void thenShouldReturnNotFound() { }
+private void thenRepositoryShouldBeCalled() { }
+```
+
+#### AssertJ 常用斷言範例
+```java
+// 基本斷言
+assertThat(actualValue).isEqualTo(expectedValue);
+assertThat(actualValue).isNotNull();
+assertThat(actualValue).isNull();
+assertThat(actualBoolean).isTrue();
+assertThat(actualBoolean).isFalse();
+
+// 字串斷言
+assertThat(actualString).isNotBlank();
+assertThat(actualString).contains("substring");
+assertThat(actualString).startsWith("prefix");
+assertThat(actualString).endsWith("suffix");
+
+// 數值斷言
+assertThat(actualNumber).isGreaterThan(0);
+assertThat(actualNumber).isLessThanOrEqualTo(100);
+assertThat(actualNumber).isBetween(1, 10);
+
+// 集合斷言
+assertThat(actualList).hasSize(3);
+assertThat(actualList).isEmpty();
+assertThat(actualList).isNotEmpty();
+assertThat(actualList).contains(expectedItem);
+assertThat(actualList).containsOnly(item1, item2, item3);
+assertThat(actualList).extracting(User::getName).containsExactly("John", "Jane");
+
+// 異常斷言
+assertThat(thrownException).isInstanceOf(ExpectedException.class);
+assertThat(thrownException).hasMessage("Expected message");
+assertThat(thrownException).hasMessageContaining("partial message");
+assertThat(thrownException).hasNoCause();
+
+// 時間斷言
+assertThat(actualDateTime).isBefore(expectedDateTime);
+assertThat(actualDateTime).isAfter(expectedDateTime);
+assertThat(actualDateTime).isBeforeOrEqualTo(LocalDateTime.now());
+```
 ## 📚 文檔規範
 
 ### 1. JavaDoc 規範
