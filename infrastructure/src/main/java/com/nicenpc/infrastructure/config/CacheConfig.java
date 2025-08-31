@@ -7,6 +7,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -17,12 +18,19 @@ import java.util.Arrays;
  */
 @Configuration
 @EnableCaching
+@EnableConfigurationProperties(CacheConfig.CacheProperties.class)
 public class CacheConfig {
     
     // 快取常數
     public static final String USERS_CACHE = "users";
     public static final String USER_STATS_CACHE = "user-stats";
     public static final String SYSTEM_CONFIG_CACHE = "system-config";
+    
+    private final CacheProperties cacheProperties;
+    
+    public CacheConfig(CacheProperties cacheProperties) {
+        this.cacheProperties = cacheProperties;
+    }
     
     @Bean
     public CacheManager cacheManager() {
@@ -35,8 +43,8 @@ public class CacheConfig {
             SYSTEM_CONFIG_CACHE
         ));
         
-        // 為不同快取設定不同的策略
-        cacheManager.setCaffeine(defaultCaffeineCacheBuilder());
+        // 使用統一的快取配置
+        cacheManager.setCaffeine(caffeineCacheBuilder());
         
         // 啟用動態快取創建
         cacheManager.setAllowNullValues(false);
@@ -45,48 +53,19 @@ public class CacheConfig {
     }
     
     /**
-     * 預設快取配置 - 適用於一般數據
+     * 快取配置 - 整合屬性配置
      */
-    private Caffeine<Object, Object> defaultCaffeineCacheBuilder() {
+    private Caffeine<Object, Object> caffeineCacheBuilder() {
         return Caffeine.newBuilder()
                 .initialCapacity(100)
-                .maximumSize(1000)
-                .expireAfterAccess(Duration.ofMinutes(10))
-                .expireAfterWrite(Duration.ofMinutes(5))
+                .maximumSize(cacheProperties.getMaxSize())
+                .expireAfterAccess(cacheProperties.getDefaultTtl())
+                .expireAfterWrite(cacheProperties.getDefaultTtl().dividedBy(2))
                 .recordStats()
                 .removalListener((key, value, cause) -> {
                     // 記錄快取移除事件用於監控
                     System.out.printf("快取移除: key=%s, cause=%s%n", key, cause);
                 });
-    }
-    
-    /**
-     * 使用者數據專用快取配置
-     */
-    @Bean("userCacheBuilder")
-    public Caffeine<Object, Object> userCaffeineCacheBuilder() {
-        return Caffeine.newBuilder()
-                .initialCapacity(200)
-                .maximumSize(2000)
-                .expireAfterAccess(Duration.ofMinutes(15))
-                .expireAfterWrite(Duration.ofMinutes(10))
-                .recordStats()
-                .removalListener((key, value, cause) -> {
-                    System.out.printf("使用者快取移除: key=%s, cause=%s%n", key, cause);
-                });
-    }
-    
-    /**
-     * 系統配置快取配置 - 長期快取
-     */
-    @Bean("configCacheBuilder")
-    public Caffeine<Object, Object> configCaffeineCacheBuilder() {
-        return Caffeine.newBuilder()
-                .initialCapacity(50)
-                .maximumSize(500)
-                .expireAfterAccess(Duration.ofHours(2))
-                .expireAfterWrite(Duration.ofHours(1))
-                .recordStats();
     }
     
     /**
