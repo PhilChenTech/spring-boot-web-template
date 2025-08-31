@@ -62,15 +62,16 @@ com.nicenpc
 │   └── bus/              # 指令/查詢匯流排
 ├── infrastructure/       # 基礎設施層
 │   └── config/           # 配置類
-├── adapterinbound/       # 入站適配器
-│   ├── controller/       # REST 控制器
-│   ├── dto/              # 資料傳輸物件
-│   ├── mapper/           # DTO 映射器
-│   └── exception/        # 全域異常處理
-├── adapteroutbound/      # 出站適配器
-│   ├── entity/           # JPA 實體
-│   ├── repository/       # 倉庫實現
-│   └── mapper/           # 實體映射器
+├── adapter/              # 適配器層
+│   ├── inbound/          # 入站適配器
+│   │   ├── controller/   # REST 控制器
+│   │   ├── dto/          # 資料傳輸物件
+│   │   ├── mapper/       # DTO 映射器
+│   │   └── exception/    # 全域異常處理
+│   └── outbound/         # 出站適配器
+│       ├── entity/       # JPA 實體
+│       ├── repository/   # 倉庫實現
+│       └── mapper/       # 實體映射器
 ├── bootstrap/            # 啟動層
 │   ├── config/           # Spring 配置
 │   └── metrics/          # 監控指標
@@ -125,6 +126,301 @@ private boolean flag;
 private static final String DEFAULT_EMAIL_DOMAIN = "@nicenpc.com";
 private static final int MAX_RETRY_ATTEMPTS = 3;
 private static final Pattern EMAIL_PATTERN = Pattern.compile("...");
+```
+
+### 2. Java Record 使用規範
+
+#### 適用場景
+
+Java Record (Java 14+) 適合用於不可變的資料載體類別，特別適用於以下場景：
+
+```java
+// ✅ 推薦使用 Record 的場景
+
+// 1. DTO/VO 類別 - 資料傳輸物件
+public record CreateUserRequest(
+    @NotBlank(message = "姓名不能為空") String name,
+    @Email(message = "信箱格式不正確") String email
+) {}
+
+public record UserResponse(
+    Long id,
+    String name,
+    String email,
+    Instant createdAt
+) {}
+
+// 2. 值物件 (Value Objects) - 領域層
+public record Money(
+    BigDecimal amount,
+    Currency currency
+) {
+    public Money {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+        Objects.requireNonNull(currency, "Currency cannot be null");
+    }
+    
+    public Money add(Money other) {
+        if (!this.currency.equals(other.currency)) {
+            throw new IllegalArgumentException("Cannot add different currencies");
+        }
+        return new Money(this.amount.add(other.amount), this.currency);
+    }
+}
+
+// 3. 配置類別
+public record DatabaseConfig(
+    String url,
+    String username,
+    String password,
+    int maxConnections
+) {}
+
+// 4. API 回應包裝
+public record ApiResult<T>(
+    boolean success,
+    String message,
+    T data,
+    Instant timestamp
+) {
+    public static <T> ApiResult<T> success(T data) {
+        return new ApiResult<>(true, "Success", data, Instant.now());
+    }
+    
+    public static <T> ApiResult<T> error(String message) {
+        return new ApiResult<>(false, message, null, Instant.now());
+    }
+}
+
+// 5. 查詢結果投影
+public record UserSummary(
+    Long id,
+    String name,
+    String email,
+    boolean isActive
+) {}
+
+// 6. 事件物件 (領域事件)
+public record UserCreatedEvent(
+    Long userId,
+    String email,
+    Instant occurredAt
+) {}
+
+// 7. 指令物件 (CQRS Commands)
+public record CreateUserCommand(
+    String name,
+    String email,
+    String password
+) {}
+```
+
+#### 不適用場景
+
+```java
+// ❌ 避免使用 Record 的場景
+
+// 1. JPA 實體類別 - 需要可變性和 JPA 註解支援
+@Entity
+@Table(name = "TB_USER")
+public class UserEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    // JPA 需要預設構造函數和 setter
+    public UserEntity() {}
+    
+    // getters and setters...
+}
+
+// 2. 業務邏輯複雜的領域實體
+public class User {
+    private Long id;
+    private String name;
+    private String email;
+    private UserStatus status;
+    
+    // 複雜的業務邏輯方法
+    public void activate() {
+        if (this.status == UserStatus.BANNED) {
+            throw new UserCannotBeActivatedException();
+        }
+        this.status = UserStatus.ACTIVE;
+    }
+    
+    public void changeEmail(String newEmail) {
+        validateEmailFormat(newEmail);
+        this.email = newEmail;
+        // 發送事件等複雜邏輯
+    }
+}
+
+// 3. 需要繼承的類別 - Record 不支援繼承
+public abstract class BaseEntity {
+    protected Long id;
+    protected Instant createdAt;
+    // ...
+}
+
+// 4. 需要可變狀態的服務類別
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    // ...
+}
+```
+
+#### Record 最佳實踐
+
+```java
+// ✅ Record 最佳實踐
+
+// 1. 使用 compact constructor 進行驗證
+public record EmailAddress(String value) {
+    public EmailAddress {
+        Objects.requireNonNull(value, "Email cannot be null");
+        if (!isValidEmail(value)) {
+            throw new IllegalArgumentException("Invalid email format: " + value);
+        }
+    }
+    
+    private static boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+}
+
+// 2. 添加有用的工廠方法
+public record UserFilter(
+    String name,
+    String email,
+    Boolean isActive,
+    Instant createdAfter,
+    Instant createdBefore
+) {
+    public static UserFilter empty() {
+        return new UserFilter(null, null, null, null, null);
+    }
+    
+    public static UserFilter byEmail(String email) {
+        return new UserFilter(null, email, null, null, null);
+    }
+    
+    public static UserFilter activeUsers() {
+        return new UserFilter(null, null, true, null, null);
+    }
+}
+
+// 3. 實現有用的方法
+public record Point(double x, double y) {
+    public double distanceTo(Point other) {
+        return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
+    }
+    
+    public Point translate(double dx, double dy) {
+        return new Point(this.x + dx, this.y + dy);
+    }
+}
+
+// 4. 與 Bean Validation 結合使用
+public record CreateProductRequest(
+    @NotBlank(message = "產品名稱不能為空")
+    @Size(max = 100, message = "產品名稱不能超過100個字符")
+    String name,
+    
+    @NotNull(message = "價格不能為空")
+    @DecimalMin(value = "0.0", inclusive = false, message = "價格必須大於0")
+    BigDecimal price,
+    
+    @Size(max = 500, message = "描述不能超過500個字符")
+    String description
+) {}
+```
+
+#### Record vs 傳統類別選擇指南
+
+```java
+// 決策流程圖：
+
+// 問題1：這個類別主要用途是什麼？
+// - 純資料傳輸/載體 → 考慮 Record
+// - 包含複雜業務邏輯 → 使用傳統類別
+
+// 問題2：資料是否需要可變性？
+// - 不可變 → 傾向 Record
+// - 需要修改狀態 → 使用傳統類別
+
+// 問題3：是否需要繼承？
+// - 需要繼承或被繼承 → 使用傳統類別
+// - 不需要 → 可考慮 Record
+
+// 問題4：是否為 JPA 實體？
+// - 是 → 使用傳統類別
+// - 否 → 可考慮 Record
+
+// ✅ 使用 Record 的典型模式
+public record PageRequest(int page, int size, String sortBy, String sortDirection) {
+    public PageRequest {
+        if (page < 0) throw new IllegalArgumentException("Page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("Size must be > 0");
+    }
+    
+    public static PageRequest of(int page, int size) {
+        return new PageRequest(page, size, "id", "ASC");
+    }
+}
+
+// ✅ 使用傳統類別的典型模式
+@Entity
+@Table(name = "TB_ORDER")
+public class OrderEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+    
+    public void confirm() {
+        if (status != OrderStatus.PENDING) {
+            throw new IllegalStateException("Only pending orders can be confirmed");
+        }
+        this.status = OrderStatus.CONFIRMED;
+    }
+}
+```
+
+#### 常見錯誤避免
+
+```java
+// ❌ 錯誤：在 Record 中嘗試添加可變字段
+public record BadRecord(String name) {
+    // private String mutableField; // 編譯錯誤！Record 不允許額外字段
+}
+
+// ❌ 錯誤：在 Record 中嘗試繼承
+// public record BadRecord(String name) extends SomeClass {} // 編譯錯誤！
+
+// ❌ 錯誤：過度使用 Record 作為 JPA 實體
+// @Entity
+// public record UserRecord(Long id, String name) {} // 不推薦！
+
+// ✅ 正確：適當的 Record 使用
+public record SearchCriteria(
+    String keyword,
+    List<String> categories,
+    DateRange dateRange
+) {
+    public SearchCriteria {
+        categories = categories != null ? List.copyOf(categories) : List.of();
+    }
+}
 ```
 
 ### 2. 程式碼格式
@@ -464,235 +760,7 @@ public class CreateUserRequest {
 }
 
 // ✅ 回應 DTO
-#### OOP 規約
-```java
-// ✅ 正確：避免通過一個類的對象引用訪問此類的靜態變量或靜態方法
-UserUtils.validateEmail(email);  // 直接使用類名
-
-// ✅ 正確：所有的覆寫方法，必須加 @Override 註解
-@Override
-public String toString() {
-    return "User{id=" + id + ", name='" + name + "'}";
-}
-
-// ✅ 正確：相同參數類型，相同業務含義，才可以使用 Java 的可變參數
-public void addUsers(User... users) {
-    for (User user : users) {
-        userList.add(user);
-    }
-}
-
-// ✅ 正確：外部正在調用或者二方庫依賴的接口，不允許修改方法簽名，避免對接口調用方產生影響
-@Deprecated
-public void oldMethod() {
-    // 標記為廢棄，但保持向後兼容
-    newMethod();
-}
-
-public void newMethod() {
-    // 新的實現
-}
-
-// ❌ 錯誤：通過對象引用訪問靜態方法
-UserUtils userUtils = new UserUtils();
-userUtils.validateEmail(email);  // 不推薦
-
-// ❌ 錯誤：不同業務含義的參數使用可變參數
-public void processData(String... data) {  // 不清楚參數含義
-    // 處理邏輯
-}
-```
-
-#### 控制語句規約
-```java
-// ✅ 正確：在一個 switch 塊內，每個 case 要麼通過 break/return 等來終止，要麼註釋說明程序將繼續執行到哪一個 case 為止
-switch (status) {
-    case "ACTIVE":
-        processActiveUser();
-        break;
-    case "PENDING":
-        processPendingUser();
-        // fall through to INACTIVE for logging
-    case "INACTIVE":
-        logUserStatus();
-        break;
-    default:
-        throw new IllegalArgumentException("未知狀態: " + status);
-}
-
-// ✅ 正確：在 if/else/for/while/do 語句中必須使用大括號
-if (user.isActive()) {
-    processUser(user);
-}
-
-// ✅ 正確：推薦儘早 return，減少 else 的必要性
-public String getUserDisplayName(User user) {
-    if (user == null) {
-        return "訪客";
-    }
-    
-    if (StringUtils.isBlank(user.getName())) {
-        return "無名用戶";
-    }
-    
-    return user.getName();
-}
-
-// ❌ 錯誤：switch 語句缺少 default
-switch (status) {
-    case "ACTIVE":
-        processActiveUser();
-        break;
-    case "INACTIVE":
-        processInactiveUser();
-        break;
-    // 缺少 default case
-}
-
-// ❌ 錯誤：單行語句不使用大括號
-if (user.isActive())
-    processUser(user);  // 不推薦
-```
-
-#### 註釋規約
-```java
-// ✅ 正確：類、類屬性、類方法的註釋必須使用 Javadoc 規範，使用 /** 內容 */ 格式
-/**
- * 用戶服務類
- * 
- * <p>提供用戶管理相關的業務邏輯處理，包括用戶的創建、更新、查詢和刪除操作。
- * 所有的用戶操作都會進行相應的權限檢查和數據驗證。</p>
- * 
- * @author Nice NPC Team
- * @version 1.0
- * @since 2024-01-01
- */
-@Service
-public class UserService {
-    
-    /**
-     * 根據用戶 ID 查詢用戶信息
-     * 
-     * @param userId 用戶唯一標識符，不能為 null
-     * @return 用戶信息，如果用戶不存在則拋出異常
-     * @throws UserNotFoundException 當指定 ID 的用戶不存在時
-     * @throws IllegalArgumentException 當 userId 為 null 時
-     */
-    public User getUserById(Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("用戶 ID 不能為空");
-        }
-        
-        return userRepository.findById(userId)
-            .orElseThrow(() -> UserNotFoundException.withId(userId));
-    }
-}
-
-// ✅ 正確：所有的抽象方法（包括接口中的方法）必須要用 Javadoc 註釋
-/**
- * 用戶倉庫接口
- */
-public interface UserRepository {
-    
-    /**
-     * 根據郵箱地址查詢用戶
-     * 
-     * @param email 用戶郵箱地址，不能為空
-     * @return 用戶信息的 Optional 包裝，如果不存在則為空
-     */
-    Optional<User> findByEmail(String email);
-}
 @Data
-// ✅ 正確：方法內部單行註釋，在被註釋語句上方另起一行，使用 // 註釋
-public void processUser(User user) {
-    // 驗證用戶數據的完整性
-    validateUserData(user);
-    
-    // 更新用戶最後活動時間
-    user.setLastActiveTime(Instant.now());
-    
-    // 保存用戶數據
-    userRepository.save(user);
-}
-
-// ❌ 錯誤：不規範的註釋格式
-/*
- * 這是不規範的類註釋
- */
-public class UserService {
-    
-    // 這個方法缺少 Javadoc 註釋
-    public User getUserById(Long userId) {
-        return userRepository.findById(userId).orElse(null);
-    }
-}
-```
-
-#### 其他規約
-```java
-// ✅ 正確：及時清理不再使用的代碼段或配置信息
-// 定期檢查和清理註釋掉的代碼、TODO 註釋等
-
-// ✅ 正確：對於"明確停止"的線程，應該保存/恢復中斷狀態
-public void interruptibleTask() throws InterruptedException {
-    while (!Thread.currentThread().isInterrupted()) {
-        // 執行任務
-        doWork();
-        
-        // 檢查中斷狀態
-        if (Thread.interrupted()) {
-            // 清理資源
-            cleanup();
-            throw new InterruptedException("任務被中斷");
-        }
-    }
-}
-
-// ✅ 正確：高併發時，同步調用應該去考量鎖的性能損耗
-@Service
-public class UserService {
-    
-    private final Map<Long, User> userCache = new ConcurrentHashMap<>();
-    
-    public User getUserFromCache(Long userId) {
-        return userCache.computeIfAbsent(userId, this::loadUserFromDatabase);
-    }
-    
-    private User loadUserFromDatabase(Long userId) {
-        return userRepository.findById(userId).orElse(null);
-    }
-}
-
-// ✅ 正確：對多資源、數據庫表、同步對象的加鎖順序要保持一致，否則可能會造成死鎖
-public class OrderService {
-    
-    private final Object userLock = new Object();
-    private final Object orderLock = new Object();
-    
-    public void transferOrder(Long fromUserId, Long toUserId, Long orderId) {
-        // 始終按照用戶 ID 的順序加鎖，避免死鎖
-        Long firstUserId = Math.min(fromUserId, toUserId);
-        Long secondUserId = Math.max(fromUserId, toUserId);
-        
-        synchronized (getLockForUser(firstUserId)) {
-            synchronized (getLockForUser(secondUserId)) {
-                // 執行轉移邏輯
-                doTransferOrder(fromUserId, toUserId, orderId);
-            }
-        }
-    }
-}
-
-// ❌ 錯誤：不一致的加鎖順序可能導致死鎖
-public void badLockingExample(Long userId1, Long userId2) {
-    synchronized (getLockForUser(userId1)) {  // 線程 A 先鎖 user1
-        synchronized (getLockForUser(userId2)) {  // 然後鎖 user2
-            // 業務邏輯
-        }
-    }
-    // 另一個方法中可能先鎖 user2 再鎖 user1，導致死鎖
-}
-```
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
@@ -725,6 +793,10 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>(false, message, null, Instant.now());
+    }
+
+    public static <T> ApiResponse<T> errorWithData(String message, T data) {
+        return new ApiResponse<>(false, message, data, Instant.now());
     }
 }
 ```
@@ -807,7 +879,7 @@ public class GlobalExceptionHandler {
 
         log.warn("Validation failed: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ApiResponse.error("Validation failed").data(errors));
+            .body(ApiResponse.errorWithData("Validation failed", errors));
     }
 
     @ExceptionHandler(Exception.class)
@@ -815,6 +887,237 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error occurred", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ApiResponse.error("An unexpected error occurred"));
+    }
+}
+```
+
+## 🧪 測試規範
+
+### 1. 測試分層結構
+
+```java
+// ✅ 單元測試 - Domain Layer
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private UserService userService;
+
+    @Test
+    @DisplayName("應該成功創建使用者")
+    void shouldCreateUserSuccessfully() {
+        // Given
+        String name = "John Doe";
+        String email = "john@example.com";
+        User expectedUser = new User(name, email);
+        
+        when(userRepository.save(any(User.class))).thenReturn(expectedUser);
+
+        // When
+        User actualUser = userService.createUser(name, email);
+
+        // Then
+        assertThat(actualUser).isNotNull();
+        assertThat(actualUser.getName()).isEqualTo(name);
+        assertThat(actualUser.getEmail()).isEqualTo(email);
+    }
+}
+
+// ✅ 整合測試 - Repository Layer
+@DataJpaTest
+@TestPropertySource(properties = {
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.datasource.url=jdbc:h2:mem:testdb"
+})
+class UserRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
+    private UserJpaRepository userRepository;
+
+    @Test
+    @DisplayName("應該根據信箱查詢到使用者")
+    void shouldFindUserByEmail() {
+        // Given
+        UserEntity user = new UserEntity();
+        user.setName("John Doe");
+        user.setEmail("john@example.com");
+        entityManager.persistAndFlush(user);
+
+        // When
+        Optional<UserEntity> foundUser = userRepository.findByEmail("john@example.com");
+
+        // Then
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getName()).isEqualTo("John Doe");
+    }
+}
+
+// ✅ API 測試 - Controller Layer
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Testcontainers
+class UserControllerIntegrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Test
+    @DisplayName("應該成功創建使用者並回傳201狀態碼")
+    void shouldCreateUserAndReturn201() {
+        // Given
+        CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com");
+
+        // When
+        ResponseEntity<ApiResponse> response = restTemplate.postForEntity(
+            "/api/v1/users", request, ApiResponse.class);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().isSuccess()).isTrue();
+    }
+}
+```
+
+### 2. 測試命名規範
+
+```java
+// ✅ 正確的測試方法命名
+@Test
+@DisplayName("當提供有效的使用者資料時，應該成功創建使用者")
+void shouldCreateUser_WhenValidUserDataProvided() { }
+
+@Test
+@DisplayName("當信箱已存在時，應該拋出 UserAlreadyExistsException")
+void shouldThrowUserAlreadyExistsException_WhenEmailAlreadyExists() { }
+
+@Test
+@DisplayName("當使用者ID不存在時，應該拋出 UserNotFoundException")
+void shouldThrowUserNotFoundException_WhenUserIdNotExists() { }
+
+// ❌ 錯誤的測試方法命名
+@Test
+void test1() { }  // 不描述測試內容
+
+@Test
+void createUser() { }  // 不描述預期結果
+
+@Test
+void testCreateUserWithInvalidEmail() { }  // 缺少預期行為
+```
+
+### 3. 測試覆蓋率要求
+
+- **Domain Layer**: 90% 以上
+- **Application Layer**: 85% 以上
+- **Adapter Layer**: 80% 以上
+- **整體專案**: 85% 以上
+
+## 📚 文檔規範
+
+### 1. API 文檔規範
+
+```java
+// ✅ 完整的 API 文檔
+@RestController
+@RequestMapping("/api/v1/users")
+@Tag(name = "User Management", description = "使用者管理相關 API")
+public class UserController {
+
+    @Operation(
+        summary = "創建新使用者",
+        description = "根據提供的姓名和信箱創建一個新的使用者帳號"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "使用者創建成功",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UserResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "請求參數驗證失敗",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "信箱地址已被使用",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        )
+    })
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+        @Parameter(description = "使用者創建請求資料", required = true)
+        @Valid @RequestBody CreateUserRequest request
+    ) {
+        // 實作邏輯
+    }
+}
+```
+
+### 2. README 文檔規範
+
+每個模組都應包含詳細的 README.md 文件，包含：
+
+- 模組目的和職責
+- 依賴關係說明
+- 設定和使用方式
+- 範例程式碼
+- 故障排除指南
+
+### 3. 程式碼註釋規範
+
+```java
+/**
+ * 使用者服務類
+ * 
+ * <p>負責處理使用者相關的業務邏輯，包括使用者的創建、查詢、更新和刪除操作。
+ * 所有操作都會進行適當的權限檢查和資料驗證。</p>
+ * 
+ * <p>使用範例：</p>
+ * <pre>{@code
+ * UserService userService = new UserService(userRepository);
+ * User user = userService.createUser("John Doe", "john@example.com");
+ * }</pre>
+ * 
+ * @author Nice NPC Team
+ * @version 1.0
+ * @since 2024-01-01
+ */
+@Service
+@RequiredArgsConstructor
+public class UserService {
+    
+    /**
+     * 根據使用者 ID 查詢使用者資訊
+     * 
+     * @param userId 使用者的唯一識別碼，不能為 null
+     * @return 使用者資訊物件
+     * @throws IllegalArgumentException 當 userId 為 null 時
+     * @throws UserNotFoundException 當指定 ID 的使用者不存在時
+     */
+    public User getUserById(Long userId) {
+        // 實作邏輯
     }
 }
 ```
@@ -878,74 +1181,98 @@ TB_ACCESS_LOG            -- 訪問日誌
 - **描述性**: 清楚表達欄位用途
 
 ```sql
--- ✅ 正確的欄位命名
+-- ✅ 正確的欄位命名 (修正版本)
 CREATE TABLE TB_USER (
-    USER_ID                BIGINT PRIMARY KEY,          -- 使用者ID
+    USER_ID                BIGSERIAL PRIMARY KEY,       -- 使用者ID
     USER_NAME              VARCHAR(50) NOT NULL,        -- 使用者姓名
     EMAIL_ADDRESS          VARCHAR(100) UNIQUE,         -- 信箱地址
     PASSWORD_HASH          VARCHAR(255) NOT NULL,       -- 密碼雜湊
     PHONE_NUMBER           VARCHAR(20),                 -- 電話號碼
-    DATE_OF_BIRTH          DATE,                        -- 出生日期
+    DATE_OF_BIRTH          TIMESTAMPTZ,                 -- 出生日期 (修正為 TIMESTAMPTZ)
     IS_ACTIVE              BOOLEAN DEFAULT TRUE,        -- 是否啟用
     IS_EMAIL_VERIFIED      BOOLEAN DEFAULT FALSE,       -- 信箱是否驗證
-    LAST_LOGIN_TIME        TIMESTAMP,                   -- 最後登入時間
-    CREATED_AT             TIMESTAMP DEFAULT NOW(),     -- 建立時間
+    LAST_LOGIN_TIME        TIMESTAMPTZ,                 -- 最後登入時間
+    CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
     CREATED_BY             BIGINT,                      -- 建立者ID
-    UPDATED_AT             TIMESTAMP DEFAULT NOW(),     -- 更新時間
+    UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
     UPDATED_BY             BIGINT,                      -- 更新者ID
     VERSION                INTEGER DEFAULT 0            -- 版本號（樂觀鎖）
 );
-
--- ❌ 錯誤的欄位命名
-CREATE TABLE TB_USER (
-    id                     BIGINT,                      -- 小寫
-    userName               VARCHAR(50),                 -- 駝峰命名
-    email_address          VARCHAR(100),                -- 部分小寫
-    Password_Hash          VARCHAR(255),                -- 混合大小寫
-    phone                  VARCHAR(20),                 -- 不夠描述性
-    dob                    DATE,                        -- 縮寫不清楚
-    active                 BOOLEAN,                     -- 不夠描述性
-    create_time            TIMESTAMP                    -- 不一致的命名
-);
 ```
 
-#### 常用欄位命名模式
+### 3. 資料類型規範
+
+#### 常用資料類型對應
+| 用途 | PostgreSQL 類型 | 說明 |
+|------|----------------|------|
+| 主鍵 | `BIGSERIAL` | 自增長整數 |
+| 外鍵 | `BIGINT` | 64位元整數 |
+| 短文字 | `VARCHAR(n)` | 可變長度字串 |
+| 長文字 | `TEXT` | 不限長度文字 |
+| 布林值 | `BOOLEAN` | 真/假值 |
+| 時間 | `TIMESTAMPTZ` | 帶時區時間戳 |
+| 金額 | `DECIMAL(19,4)` | 高精度小數 |
+| JSON | `JSONB` | 二進制JSON格式 |
+
+### 4. 索引設計規範
+
 ```sql
--- 主鍵欄位
-{TABLE_NAME}_ID                 -- USER_ID, PRODUCT_ID, ORDER_ID
+-- ✅ 正確的索引設計
+-- 單欄位索引
+CREATE INDEX IDX_USER_EMAIL ON TB_USER(EMAIL_ADDRESS);
+CREATE INDEX IDX_USER_CREATED_AT ON TB_USER(CREATED_AT);
 
--- 外鍵欄位
-{REFERENCED_TABLE}_ID           -- USER_ID, CATEGORY_ID, PARENT_ID
+-- 複合索引
+CREATE INDEX IDX_USER_STATUS_CREATED ON TB_USER(IS_ACTIVE, CREATED_AT);
 
--- 狀態欄位
-{ENTITY}_STATUS                 -- ORDER_STATUS, USER_STATUS, PAYMENT_STATUS
+-- 唯一索引
+CREATE UNIQUE INDEX UNQ_USER_EMAIL ON TB_USER(EMAIL_ADDRESS) WHERE IS_ACTIVE = TRUE;
 
--- 布林欄位 (使用 IS_ 前綴)
-IS_ACTIVE                       -- 是否啟用
-IS_DELETED                      -- 是否刪除
-IS_VERIFIED                     -- 是否驗證
-IS_DEFAULT                      -- 是否預設
+-- 部分索引
+CREATE INDEX IDX_USER_ACTIVE ON TB_USER(USER_ID) WHERE IS_ACTIVE = TRUE;
+```
 
--- 時間欄位 (必須使用 UTC+0 時區)
-CREATED_AT                      -- 建立時間 (UTC+0)
-UPDATED_AT                      -- 更新時間 (UTC+0)
-DELETED_AT                      -- 刪除時間 (UTC+0)
-EXPIRED_AT                      -- 過期時間 (UTC+0)
-LAST_LOGIN_TIME                 -- 最後登入時間 (UTC+0)
-SCHEDULED_TIME                  -- 排程時間 (UTC+0)
+### 5. 外鍵約束規範
 
--- 計數欄位
-{ENTITY}_COUNT                  -- USER_COUNT, ORDER_COUNT, VIEW_COUNT
+```sql
+-- ✅ 正確的外鍵定義
+ALTER TABLE TB_ORDER 
+ADD CONSTRAINT FK_ORDER_USER 
+FOREIGN KEY (USER_ID) REFERENCES TB_USER(USER_ID)
+ON DELETE RESTRICT 
+ON UPDATE CASCADE;
 
--- 金額欄位
-{TYPE}_AMOUNT                   -- TOTAL_AMOUNT, DISCOUNT_AMOUNT, TAX_AMOUNT
+-- 命名規範：FK_{子表}_{父表}
+-- 或 FK_{子表}_{欄位名稱}
+```
 
--- 代碼欄位
-{ENTITY}_CODE                   -- USER_CODE, PRODUCT_CODE, ORDER_CODE
+### 6. 檢查約束規範
 
--- 描述欄位
-{ENTITY}_DESCRIPTION            -- PRODUCT_DESCRIPTION, ERROR_DESCRIPTION
-{ENTITY}_REMARKS                -- ORDER_REMARKS, USER_REMARKS
+```sql
+-- ✅ 資料驗證約束
+ALTER TABLE TB_USER 
+ADD CONSTRAINT CHK_USER_EMAIL_FORMAT 
+CHECK (EMAIL_ADDRESS ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$');
+
+ALTER TABLE TB_ORDER 
+ADD CONSTRAINT CHK_ORDER_AMOUNT_POSITIVE 
+CHECK (TOTAL_AMOUNT > 0);
+```
+
+### 7. 審計欄位規範
+
+```sql
+-- ✅ 標準審計欄位 (所有表格必須包含)
+CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+CREATED_BY             BIGINT NOT NULL,
+UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+UPDATED_BY             BIGINT NOT NULL,
+VERSION                INTEGER DEFAULT 0 NOT NULL,
+
+-- 軟刪除支援 (可選)
+IS_DELETED             BOOLEAN DEFAULT FALSE NOT NULL,
+DELETED_AT             TIMESTAMPTZ,
+DELETED_BY             BIGINT
 ```
 
 ### 8. 時間處理規範
@@ -961,8 +1288,8 @@ SCHEDULED_TIME                  -- 排程時間 (UTC+0)
 CREATE TABLE TB_USER (
     USER_ID                BIGSERIAL PRIMARY KEY,
     USER_NAME              VARCHAR(50) NOT NULL,
-    EMAIL_ADDRESS          VARCHAR(100) UNIQUE NOT NULL,
-
+    EMAIL_ADDRESS          VARCHAR(100) NOT NULL,
+    
     -- PostgreSQL 必須使用 TIMESTAMPTZ 類型
     CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
     UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
@@ -1005,6 +1332,46 @@ CREATE TABLE TB_USER (
 | `DATE` | ❌ **禁止使用** | 只有日期，缺少時間精度 |
 | `TIME` | ❌ **禁止使用** | 只有時間，沒有日期資訊 |
 | `TIMESTAMP WITHOUT TIME ZONE` | ❌ **禁止使用** | 明確排除時區處理 |
-````
 
-</details>
+### 9. 資料庫版本控制規範
+
+#### Flyway 遷移腳本命名
+```
+V{版本號}__{描述}.sql
+
+範例：
+V1__Create_users_table.sql
+V2__Add_user_email_index.sql
+V3__Alter_user_add_phone_column.sql
+V4__Insert_default_admin_user.sql
+```
+
+#### 遷移腳本最佳實踐
+```sql
+-- ✅ 正確的遷移腳本結構
+-- V1__Create_users_table.sql
+
+-- 表格創建
+CREATE TABLE TB_USER (
+    USER_ID                BIGSERIAL PRIMARY KEY,
+    USER_NAME              VARCHAR(50) NOT NULL,
+    EMAIL_ADDRESS          VARCHAR(100) NOT NULL,
+    
+    -- 審計欄位
+    CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+    CREATED_BY             BIGINT NOT NULL,
+    UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC') NOT NULL,
+    UPDATED_BY             BIGINT NOT NULL,
+    VERSION                INTEGER DEFAULT 0 NOT NULL
+);
+
+-- 索引創建
+CREATE UNIQUE INDEX UNQ_USER_EMAIL ON TB_USER(EMAIL_ADDRESS);
+CREATE INDEX IDX_USER_CREATED_AT ON TB_USER(CREATED_AT);
+
+-- 註釋添加
+COMMENT ON TABLE TB_USER IS '使用者資料表';
+COMMENT ON COLUMN TB_USER.USER_ID IS '使用者唯一識別碼';
+COMMENT ON COLUMN TB_USER.USER_NAME IS '使用者姓名';
+COMMENT ON COLUMN TB_USER.EMAIL_ADDRESS IS '使用者信箱地址';
+```
