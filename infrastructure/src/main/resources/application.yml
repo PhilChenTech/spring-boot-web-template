@@ -1,0 +1,137 @@
+# 統一應用程式配置
+app:
+  name: ${APP_NAME:nice-npc-ddd-template}
+  version: ${APP_VERSION:1.0.0}
+  description: ${APP_DESCRIPTION:基於 Clean Architecture 和 DDD 原則的 Spring Boot 模板專案}
+  
+  # 統一資料庫配置
+  database:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    name: ${DB_NAME:springboot_template}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:test}
+  
+  # 統一安全配置
+  security:
+    admin-username: ${ADMIN_USERNAME:admin}
+    admin-password: ${ADMIN_PASSWORD:change_me_in_production}
+    admin-roles: ${ADMIN_ROLES:ADMIN}
+  
+  # 統一 CORS 配置
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:Authorization,Content-Type,Accept,X-Requested-With,Cache-Control}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+    max-age: ${CORS_MAX_AGE:3600}
+  
+  # 統一快取配置  
+  cache:
+    type: ${CACHE_TYPE:caffeine}
+    spec: ${CACHE_SPEC:maximumSize=1000,expireAfterAccess=600s,expireAfterWrite=300s}
+
+# Spring Boot 配置
+spring:
+  application:
+    name: ${app.name}
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:web}  # 預設為 web 模式
+  
+  # 資料庫配置 - 使用 app 配置
+  datasource:
+    url: jdbc:postgresql://${app.database.host}:${app.database.port}/${app.database.name}
+    driver-class-name: org.postgresql.Driver
+    username: ${app.database.username}
+    password: ${app.database.password}
+  
+  # JPA 通用設定
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: ${JPA_FORMAT_SQL:false}
+        use_sql_comments: ${JPA_SQL_COMMENTS:false}
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  # Flyway 資料庫遷移設定
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+  
+  # Spring Security 配置 - 使用 app 配置
+  security:
+    user:
+      name: ${app.security.admin-username}
+      password: ${app.security.admin-password}
+      roles: ${app.security.admin-roles}
+
+  # Spring Cache 配置 - 使用 app 配置
+  cache:
+    type: ${app.cache.type}
+    caffeine:
+      spec: ${app.cache.spec}
+
+# 日誌通用設定
+logging:
+  level:
+    com.nicenpc: ${LOG_LEVEL_APP:INFO}
+    root: ${LOG_LEVEL_ROOT:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+
+# 服務器通用設定
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: ${SERVER_SHUTDOWN:immediate}
+
+# 監控端點配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,configprops,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when-authorized}
+      group:
+        custom:
+          include: db,diskSpace
+    info:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+
+# 應用程式資訊
+info:
+  app:
+    name: Nice NPC Spring Boot DDD Template
+    description: 基於 Clean Architecture 和 DDD 原則的 Spring Boot 模板專案
+    version: 1.0.0
+    author: Nice NPC Team
+  build:
+    artifact: ${project.artifactId:springboot-web-template}
+    name: ${project.name:Nice NPC Spring Boot Template}
+    time: ${maven.build.timestamp:unknown}
+    version: ${project.version:1.0.0}

@@ -26,14 +26,13 @@
 
 ```
 springboot-web-template/
-├── bootstrap/              # 引導模組 - 應用程式啟動和配置
 ├── domain/                 # 領域層 - 核心業務邏輯
 ├── application/            # 應用層 - 業務用例協調
 │   ├── command/           # CQRS 指令
 │   ├── query/             # CQRS 查詢
 │   ├── handler/           # 指令/查詢處理器
 │   └── bus/               # 指令/查詢匯流排
-├── infrastructure/        # 基礎設施層 - 外部依賴實現
+├── infrastructure/        # 基礎設施層 - 應用程式啟動、配置與外部依賴實現
 ├── adapter/               # 適配器層 - 包含入站和出站適配器
 │   ├── inbound/          # 入站適配器 - REST 控制器和 API
 │   └── outbound/         # 出站適配器 - 資料庫存取層

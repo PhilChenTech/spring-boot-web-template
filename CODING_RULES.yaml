@@ -5,10 +5,9 @@ coding_rules:
   architecture_principles:
     layered_architecture:
       structure:
-        bootstrap: "Application startup and configuration"
         domain: "Domain layer - Pure business logic"
         application: "Application layer - CQRS implementation"
-        infrastructure: "Infrastructure layer - External dependency implementations"
+        infrastructure: "Infrastructure layer - Application startup, configuration and external dependency implementations"
         adapter_inbound: "Inbound adapters - REST controllers"
         adapter_outbound: "Outbound adapters - Database access"
         common: "Common utilities and configurations"
@@ -16,9 +15,8 @@ coding_rules:
     dependency_rules:
       domain_layer: "Does not depend on any other layers, keeps pure"
       application_layer: "Only depends on Domain Layer"
-      infrastructure_layer: "Can depend on Domain and Application layers"
+      infrastructure_layer: "Can depend on Domain and Application layers, responsible for application startup"
       adapter_layers: "Can depend on all inner layers"
-      bootstrap_layer: "Can depend on all layers, responsible for assembly"
 
     clean_architecture_principles:
       - "Inner layers do not depend on outer layers"
@@ -57,8 +55,8 @@ coding_rules:
           - "entity"     # JPA entities
           - "repository" # Repository implementations
           - "mapper"     # Entity mappers
-      bootstrap:
-        description: "Bootstrap layer"
+      infrastructure:
+        description: "Infrastructure layer"
         packages:
           - "config"     # Spring configurations
           - "metrics"    # Monitoring metrics
