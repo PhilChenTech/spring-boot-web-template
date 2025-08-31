@@ -724,371 +724,59 @@ SCHEDULED_TIME                  -- 排程時間 (UTC+0)
 
 #### 數據庫時間規範
 - **時區**: 所有時間欄位必須使用 **UTC+0** 時區儲存
-- **資料類型**: 使用 `TIMESTAMP` 或 `TIMESTAMPTZ` (PostgreSQL)
+- **資料類型**: 使用 `TIMESTAMPTZ` (PostgreSQL 推薦) 或 `TIMESTAMP`
 - **預設值**: 使用 `NOW()` 或 `CURRENT_TIMESTAMP` 設定預設時間
+- **PostgreSQL 強制規範**: 必須使用 `TIMESTAMPTZ` 確保時區處理正確
 
 ```sql
--- ✅ 正確的時間欄位定義
+-- ✅ 正確的時間欄位定義 (PostgreSQL)
 CREATE TABLE TB_USER (
     USER_ID                BIGSERIAL PRIMARY KEY,
     USER_NAME              VARCHAR(50) NOT NULL,
     EMAIL_ADDRESS          VARCHAR(100) UNIQUE NOT NULL,
     
-    -- 時間欄位必須使用 UTC+0 時區
+    -- PostgreSQL 必須使用 TIMESTAMPTZ 類型
     CREATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
     UPDATED_AT             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
     LAST_LOGIN_TIME        TIMESTAMPTZ,
     EXPIRED_AT             TIMESTAMPTZ,
+    DATE_OF_BIRTH          TIMESTAMPTZ,        -- 即使是日期也使用 TIMESTAMPTZ
     
     VERSION                INTEGER DEFAULT 0
 );
 
+-- ✅ 其他時間欄位範例
+CREATE TABLE TB_ORDER (
+    ORDER_ID               BIGSERIAL PRIMARY KEY,
+    USER_ID                BIGINT NOT NULL,
+    
+    -- 所有時間相關欄位都使用 TIMESTAMPTZ
+    ORDER_DATE             TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    DELIVERY_DATE          TIMESTAMPTZ,
+    CANCELLED_AT           TIMESTAMPTZ,
+    PAYMENT_TIME           TIMESTAMPTZ,
+    
+    FOREIGN KEY (USER_ID) REFERENCES TB_USER(USER_ID)
+);
+
 -- ❌ 錯誤的時間欄位定義
 CREATE TABLE TB_USER (
-    CREATED_TIME           TIMESTAMP,                    -- 沒有明確指定 UTC
-    UPDATE_DATE            DATE,                         -- 使用 DATE 而非 TIMESTAMP
-    login_time             TIMESTAMP DEFAULT NOW()       -- 沒有 UTC 轉換
+    CREATED_TIME           TIMESTAMP,                    -- 禁止：沒有時區資訊
+    UPDATE_DATE            DATE,                         -- 禁止：只有日期，缺少時間
+    LOGIN_TIME             TIME,                         -- 禁止：只有時間，沒有日期
+    BIRTH_DATE             DATE,                         -- 禁止：即使是日期也要用 TIMESTAMPTZ
+    TIMESTAMP_FIELD        TIMESTAMP WITHOUT TIME ZONE   -- 禁止：明確排除時區
 );
 ```
 
-#### Java 時間處理規範
-- **強制使用**: 所有時間處理必須使用 `java.time.Instant` 類
-- **禁止使用**: `java.util.Date`, `java.sql.Timestamp`, `LocalDateTime`, `LocalDate`, `LocalTime`, `ZonedDateTime`, `OffsetDateTime` (除非明確需要時區轉換顯示)
-- **時區轉換**: 僅在顯示層進行時區轉換，轉換後立即丟棄，不可存儲
+#### PostgreSQL 時間類型規範
+| 類型 | 使用規範 | 說明 |
+|------|----------|------|
+| `TIMESTAMPTZ` | ✅ **強制使用** | 包含時區資訊，自動轉換為 UTC 儲存 |
+| `TIMESTAMP` | ❌ **禁止使用** | 沒有時區資訊，容易產生混亂 |
+| `DATE` | ❌ **禁止使用** | 只有日期，缺少時間精度 |
+| `TIME` | ❌ **禁止使用** | 只有時間，沒有日期資訊 |
+| `TIMESTAMP WITHOUT TIME ZONE` | ❌ **禁止使用** | 明確排除時區處理 |
+````
 
-```java
-// ✅ 正確的時間處理
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
-@Entity
-@Table(name = "TB_USER")
-public class UserEntity {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "USER_ID")
-    private Long userId;
-    
-    // 使用 Instant 處理所有時間欄位
-    @Column(name = "CREATED_AT")
-    private Instant createdAt;
-    
-    @Column(name = "UPDATED_AT")
-    private Instant updatedAt;
-    
-    @Column(name = "LAST_LOGIN_TIME")
-    private Instant lastLoginTime;
-    
-    @Column(name = "EXPIRED_AT")
-    private Instant expiredAt;
-    
-    @Column(name = "DATE_OF_BIRTH")
-    private Instant dateOfBirth;        // 即使是日期也使用 Instant
-    
-    // JPA 生命週期方法
-    @PrePersist
-    protected void onCreate() {
-        Instant now = Instant.now();  // 自動獲取 UTC 時間
-        createdAt = now;
-        updatedAt = now;
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = Instant.now();    // 自動更新為 UTC 時間
-    }
-}
-
-// ✅ 正確的服務層時間處理
-@Service
-@RequiredArgsConstructor
-public class UserService {
-    
-    private final UserRepository userRepository;
-    
-    public User createUser(CreateUserCommand command) {
-        User user = User.builder()
-            .name(command.getName())
-            .email(command.getEmail())
-            .createdAt(Instant.now())        // 使用 UTC 時間
-            .updatedAt(Instant.now())
-            .dateOfBirth(command.getDateOfBirth())  // 接收 Instant 類型
-            .build();
-            
-        return userRepository.save(user);
-    }
-    
-    public void updateLastLoginTime(Long userId) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> UserNotFoundException.withId(userId));
-            
-        user.setLastLoginTime(Instant.now());  // 記錄 UTC 登入時間
-        userRepository.save(user);
-    }
-    
-    // 僅在顯示時進行時區轉換，不可存儲轉換後的結果
-    public String formatUserCreatedTime(User user, String timeZone) {
-        ZoneId zone = ZoneId.of(timeZone);
-        ZonedDateTime zonedTime = user.getCreatedAt().atZone(zone);
-        return zonedTime.toString();  // 立即轉換為字串，不保存 ZonedDateTime
-    }
-    
-    // 日期計算也使用 Instant
-    public boolean isUserAdult(User user) {
-        Instant eighteenYearsAgo = Instant.now().minus(Duration.ofDays(365 * 18));
-        return user.getDateOfBirth().isBefore(eighteenYearsAgo);
-    }
-}
-
-// ❌ 錯誤的時間處理 - 完全禁止
-public class UserEntity {
-    
-    // 禁止使用的所有時間類型
-    private Date createdAt;              // 禁止使用 java.util.Date
-    private Timestamp updatedAt;         // 禁止使用 java.sql.Timestamp
-    private LocalDateTime lastLogin;     // 禁止使用 LocalDateTime
-    private LocalDate dateOfBirth;      // 禁止使用 LocalDate
-    private LocalTime loginTime;         // 禁止使用 LocalTime
-    private ZonedDateTime zonedTime;     // 禁止存儲 ZonedDateTime
-    private OffsetDateTime offsetTime;   // 禁止存儲 OffsetDateTime
-    private Calendar expiredTime;        // 禁止使用 Calendar
-}
-
-// ❌ 錯誤的服務層實現
-@Service
-public class UserService {
-    
-    public void wrongTimeHandling() {
-        // 禁止的操作
-        LocalDateTime now = LocalDateTime.now();     // 禁止
-        LocalDate today = LocalDate.now();           // 禁止
-        ZonedDateTime zoned = ZonedDateTime.now();   // 禁止存儲
-        
-        // 正確做法：只使用 Instant
-        Instant now = Instant.now();
-    }
-}
-```
-#### DTO 時間處理規範
-```java
-// ✅ 正確的 DTO 時間處理
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserResponse {
-    
-    private Long id;
-    private String name;
-    private String email;
-    
-    // DTO 中也使用 Instant
-    private Instant createdAt;
-    private Instant updatedAt;
-    private Instant lastLoginTime;
-    
-    // 可選：提供格式化方法供前端使用
-    public String getFormattedCreatedAt(String timeZone) {
-        if (createdAt == null) return null;
-        
-        ZoneId zone = ZoneId.of(timeZone);
-        return createdAt.atZone(zone).toString();
-    }
-}
-
-// ✅ 或者提供專門的時間格式化 DTO
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class FormattedUserResponse {
-    
-    private Long id;
-    private String name;
-    private String email;
-    
-    // 原始 UTC 時間
-    private Instant createdAt;
-    private Instant updatedAt;
-    
-    // 格式化後的本地時間 (可選)
-    private String formattedCreatedAt;
-    private String formattedUpdatedAt;
-}
-```
-
-#### 控制器時間處理規範
-```java
-// ✅ 正確的控制器時間處理
-@RestController
-@RequestMapping("/api/v1/users")
-@RequiredArgsConstructor
-public class UserController {
-    
-    private final UserService userService;
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserResponse>> getUserById(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "UTC") String timeZone) {
-        
-        User user = userService.getUserById(id);
-        
-        // 在控制器層處理時區轉換
-        UserResponse response = UserResponse.builder()
-            .id(user.getId())
-            .name(user.getName())
-            .email(user.getEmail())
-            .createdAt(user.getCreatedAt())      // 保持 UTC 時間
-            .updatedAt(user.getUpdatedAt())
-            .build();
-            
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-    
-    @PostMapping
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(
-            @Valid @RequestBody CreateUserRequest request) {
-        
-        CreateUserCommand command = CreateUserCommand.builder()
-            .name(request.getName())
-            .email(request.getEmail())
-            .requestTime(Instant.now())          // 記錄請求時間 (UTC)
-            .build();
-            
-        User user = userService.createUser(command);
-        UserResponse response = mapToResponse(user);
-        
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success(response, "User created successfully"));
-    }
-}
-```
-
-#### 配置規範
-```java
-// ✅ JPA 配置 - 確保時區處理正確
-@Configuration
-public class JpaConfig {
-    
-    @Bean
-    @Primary
-    public DataSource dataSource() {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/mydb");
-        config.setUsername("user");
-        config.setPassword("password");
-        
-        // 強制使用 UTC 時區
-        config.addDataSourceProperty("serverTimezone", "UTC");
-        config.addDataSourceProperty("useTimezone", "true");
-        
-        return new HikariDataSource(config);
-    }
-}
-
-// ✅ Jackson 配置 - JSON 序列化時間格式
-@Configuration
-public class JacksonConfig {
-    
-    @Bean
-    @Primary
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        
-        // 註冊 JavaTimeModule 處理 Instant
-        mapper.registerModule(new JavaTimeModule());
-        
-        // 設定 Instant 序列化格式為 ISO-8601 UTC
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mapper.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
-        return mapper;
-    }
-}
-```
-## 📚 文檔規範
-
-### 1. JavaDoc 規範
-
-```java
-/**
- * 使用者領域實體
- * 
- * <p>此類代表系統中的使用者，包含基本的使用者資訊和業務邏輯。
- * 遵循 Domain-Driven Design 原則，保持領域模型的純淨性。</p>
- * 
- * @author Nice NPC Team
- * @version 1.0
- * @since 1.0
- */
-public class User {
-    
-    /**
-     * 創建新的使用者實例
-     * 
-     * @param name  使用者姓名，不能為空且長度在 2-50 個字符之間
-     * @param email 使用者信箱，必須符合標準信箱格式
-     * @return 新創建的使用者實例
-     * @throws UserValidationException 當輸入參數不符合業務規則時
-     */
-    public static User create(String name, String email) {
-        // 實現邏輯
-    }
-}
-```
-
-### 2. README 文檔結構
-
-每個模組都應該包含 README.md 文檔，說明：
-
-- 模組職責
-- 主要類別和介面
-- 使用範例
-- 注意事項
-
-### 3. API 文檔
-
-使用 OpenAPI 3.0 (Swagger) 自動生成 API 文檔，確保：
-
-- 所有端點都有清楚的描述
-- 請求/回應範例完整
-- 錯誤碼說明詳細
-
-## ✅ 程式碼檢查清單
-
-### 提交前檢查
-
-- [ ] 程式碼遵循命名規範
-- [ ] 已添加必要的 JavaDoc 註解
-- [ ] 已編寫相應的單元測試
-- [ ] 單元測試覆蓋率達到 80% 以上
-- [ ] 異常處理完整且適當
-- [ ] API 文檔已更新
-- [ ] 無編譯警告或錯誤
-- [ ] 遵循 Clean Architecture 原則
-- [ ] Mock 物件使用適當
-
-### Code Review 檢查點
-
-- [ ] 業務邏輯清晰且正確
-- [ ] 安全性考量充分
-- [ ] 性能影響評估
-- [ ] 代碼重複性檢查
-- [ ] 依賴注入正確使用
-- [ ] 異常處理適當
-- [ ] 測試案例充分
-
-## 📖 參考資源
-
-- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [Domain-Driven Design](https://domainlanguage.com/ddd/)
-- [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
-- [Lombok Documentation](https://projectlombok.org/features/all)
-- [OpenAPI 3.0 Specification](https://swagger.io/specification/)
-
----
-
-**最後更新**: 2025年8月31日  
-**版本**: 1.0.0  
-**維護者**: Nice NPC Team
+</details>
